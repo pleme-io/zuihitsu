@@ -1,0 +1,101 @@
+/* ishou — pleme-io design tokens.
+   THIS FILE IS GENERATED. Regenerate via: nix run .#tokens-css
+   Do not hand-edit; the ishou flake input is the source of truth. */
+
+:root {
+  /* palette */
+  --ishou-polar-night-0: #2E3440;
+  --ishou-polar-night-1: #3B4252;
+  --ishou-polar-night-2: #434C5E;
+  --ishou-polar-night-3: #4C566A;
+  --ishou-snow-storm-0: #D8DEE9;
+  --ishou-snow-storm-1: #E5E9F0;
+  --ishou-snow-storm-2: #ECEFF4;
+  --ishou-frost-0: #8FBCBB;
+  --ishou-frost-1: #88C0D0;
+  --ishou-frost-2: #81A1C1;
+  --ishou-frost-3: #5E81AC;
+  --ishou-aurora-red: #BF616A;
+  --ishou-aurora-orange: #D08770;
+  --ishou-aurora-yellow: #EBCB8B;
+  --ishou-aurora-green: #A3BE8C;
+  --ishou-aurora-purple: #B48EAD;
+  --ishou-ink: #0A0A0A;
+  --ishou-paper: #F5F5F0;
+  --ishou-shadow-tone: #141822;
+
+  /* semantic roles */
+  --ishou-color-background: var(--ishou-polar-night-0);
+  --ishou-color-surface: var(--ishou-polar-night-1);
+  --ishou-color-surface-elevated: var(--ishou-polar-night-2);
+  --ishou-color-text: var(--ishou-snow-storm-2);
+  --ishou-color-text-muted: var(--ishou-snow-storm-0);
+  --ishou-color-text-dim: var(--ishou-polar-night-3);
+  --ishou-color-primary: var(--ishou-frost-1);
+  --ishou-color-primary-hover: var(--ishou-frost-2);
+  --ishou-color-accent: var(--ishou-aurora-purple);
+  --ishou-color-error: var(--ishou-aurora-red);
+  --ishou-color-warning: var(--ishou-aurora-orange);
+  --ishou-color-success: var(--ishou-aurora-green);
+  --ishou-color-info: var(--ishou-frost-0);
+  --ishou-color-border: var(--ishou-polar-night-2);
+  --ishou-color-shadow: var(--ishou-shadow-tone);
+  --ishou-color-ink: var(--ishou-ink);
+  --ishou-color-paper: var(--ishou-paper);
+
+  /* typography */
+  --ishou-font-serif: 'Iowan Old Style', 'Charter', 'Georgia', 'Cambria', Times, serif;
+  --ishou-font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif;
+  --ishou-font-mono: 'JetBrains Mono', 'SF Mono', 'Menlo', 'Consolas', monospace;
+  --ishou-font-display: 'Inter', system-ui, sans-serif;
+  --ishou-text-xs: 0.75rem;
+  --ishou-text-sm: 0.875rem;
+  --ishou-text-base: 1rem;
+  --ishou-text-md: 1.125rem;
+  --ishou-text-lg: 1.25rem;
+  --ishou-text-xl: 1.5rem;
+  --ishou-text-2xl: 1.875rem;
+  --ishou-text-3xl: 2.25rem;
+  --ishou-text-4xl: 3rem;
+  --ishou-weight-regular: 400;
+  --ishou-weight-medium: 500;
+  --ishou-weight-semibold: 600;
+  --ishou-weight-bold: 700;
+  --ishou-leading-tight: 1.15;
+  --ishou-leading-base: 1.5;
+  --ishou-leading-relaxed: 1.65;
+  --ishou-leading-prose: 1.7;
+
+  /* spacing */
+  --ishou-space-0: 0px;
+  --ishou-space-1: 4px;
+  --ishou-space-2: 8px;
+  --ishou-space-3: 12px;
+  --ishou-space-4: 16px;
+  --ishou-space-6: 24px;
+  --ishou-space-8: 32px;
+  --ishou-space-10: 40px;
+  --ishou-space-12: 48px;
+  --ishou-space-16: 64px;
+
+  /* radius */
+  --ishou-radius-sm: 4px;
+  --ishou-radius-md: 8px;
+  --ishou-radius-lg: 12px;
+  --ishou-radius-pill: 999px;
+
+  /* shadow (elevation) */
+  --ishou-shadow-sm: 0px 1px 2px 0px rgba(20, 24, 34, 0.20);
+  --ishou-shadow-md: 0px 4px 8px 0px rgba(20, 24, 34, 0.30);
+  --ishou-shadow-lg: 0px 8px 24px -2px rgba(20, 24, 34, 0.40);
+  --ishou-shadow-xl: 0px 16px 48px -4px rgba(20, 24, 34, 0.50);
+  --ishou-shadow-brand-bold: 6px 8px 0px 0px rgba(20, 24, 34, 1.00);
+
+  /* motion */
+  --ishou-duration-fast: 150ms;
+  --ishou-duration-base: 250ms;
+  --ishou-duration-slow: 450ms;
+  --ishou-ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --ishou-ease-sonic-boom: cubic-bezier(0.12, 0.8, 0.3, 1);
+  --ishou-ease-saber: cubic-bezier(0.65, 0, 0.35, 1);
+}
