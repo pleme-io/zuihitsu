@@ -4,3 +4,8 @@
 .direnv/
 .envrc.local
 Cargo.lock.bak
+node_modules/
+dist/
+pkg/
+*.swp
+.DS_Store
