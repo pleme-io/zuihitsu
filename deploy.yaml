@@ -1,14 +1,53 @@
 # zuihitsu — forge product config.
+#
+# zuihitsu ships to three mutually-exclusive targets. Only one should be
+# `active: true` at a time. Flip the flag + forge re-orchestrates.
 
 name: zuihitsu
+environment: production
 
-environment: staging
-cluster: plo
+render_targets:
+  cloudflare-pages:
+    active: true                       # freescape-native, $0/mo
+    type: cloudflare
+    pangea: pangea/zuihitsu.rb
+    freescape:
+      provider: cloudflare
+      profile: always-free
+    apps:
+      generate: "nix run .#generate"
+      upload:   "nix run .#pages-deploy"
+      worker:   "nix run .#worker-deploy"
+      iac:      "nix run .#pangea-apply"
+    endpoints:
+      site: https://blog.pleme.io
+      webhook: https://webhook.blog.pleme.io/webhook
 
-k8s:
-  repo: git@github.com:pleme-io/k8s.git
-  local: ../k8s
-  branch: main
+  k3s-ssr:
+    active: false                      # full SSR on pleme-io cluster
+    type: kubernetes
+    cluster: plo
+    chart: chart/zuihitsu
+    helmrelease: k8s-manifests/infrastructure/zuihitsu/helmrelease.yaml
+    image: ghcr.io/pleme-io/zuihitsu
+    apps:
+      build: "nix build"
+      image: "nix run .#dockerImage"
+      deploy: "forge deploy zuihitsu --cluster plo"
+    endpoints:
+      health: https://blog.pleme.io/healthz
+      site: https://blog.pleme.io
+
+  flyio:
+    active: false                      # axum SSR on Fly, ~$2-5/mo
+    type: flyio
+    app_name: zuihitsu
+    region: gig                        # closest to Brazil
+    apps:
+      build: "nix run .#dockerImage"
+      deploy: "fly deploy --image <docker-load result>"
+    endpoints:
+      site: https://zuihitsu.fly.dev
 
 prerelease:
   frontend:
@@ -21,7 +60,7 @@ prerelease:
 release:
   services:
     - name: web
-      type: leptos
+      type: zuihitsu
       path: .
   prerelease: true
   dashboards: false
@@ -30,14 +69,6 @@ release:
 dirs:
   web: .
   docs_arch: docs/arch
-
-endpoints:
-  staging:
-    health: https://blog.staging.pleme.io/healthz
-    site: https://blog.staging.pleme.io
-  production:
-    health: https://blog.pleme.io/healthz
-    site: https://blog.pleme.io
 
 observability:
   dashboards:

@@ -6,6 +6,7 @@ pub mod pages;
 pub mod providers;
 pub mod router;
 pub mod shared;
+pub mod static_render;
 pub mod widgets;
 
 #[cfg(feature = "hydrate")]

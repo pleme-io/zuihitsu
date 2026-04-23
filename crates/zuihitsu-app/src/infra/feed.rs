@@ -1,135 +1,153 @@
-//! Sitemap + RSS generation. SSR-only — these routes are wired in `main.rs`.
+//! Sitemap + RSS generation.
+//!
+//! Exposes pure string builders (`build_sitemap`, `build_rss`) that both the
+//! SSR axum routes and the sitegen binary call. Axum handlers live in this
+//! file under `#[cfg(feature = "ssr")]`; sitegen uses the pure builders to
+//! write files to disk.
 
-use axum::http::{StatusCode, header};
-use axum::response::IntoResponse;
-
+use crate::entities::PostSummary;
 use crate::infra::graphql::client::Hashnode;
 
-const SITE_URL: &str = "https://blog.pleme.io";
+const DEFAULT_SITE_URL: &str = "https://blog.pleme.io";
 
-pub async fn sitemap_xml() -> impl IntoResponse {
-    let client = match Hashnode::from_env() {
-        Ok(c) => c,
-        Err(e) => {
-            tracing::error!(error = %e, "hashnode client init failed");
-            return error_response();
-        }
-    };
+pub fn site_url() -> String {
+    std::env::var("ZUIHITSU_SITE_URL").unwrap_or_else(|_| DEFAULT_SITE_URL.to_string())
+}
+
+pub async fn fetch_all_posts(client: &Hashnode) -> anyhow::Result<Vec<PostSummary>> {
+    let mut all = Vec::new();
     let mut cursor: Option<String> = None;
-    let mut entries = Vec::new();
     loop {
-        match client.list_posts(cursor.as_deref(), 50).await {
-            Ok(page) => {
-                for p in page.posts {
-                    entries.push((p.slug, p.published_at));
-                }
-                if page.has_next {
-                    cursor = page.next_cursor;
-                } else {
-                    break;
-                }
-            }
-            Err(e) => {
-                tracing::error!(error = %e, "hashnode list_posts failed for sitemap");
-                break;
-            }
+        let page = client.list_posts(cursor.as_deref(), 50).await?;
+        all.extend(page.posts);
+        if !page.has_next {
+            break;
         }
+        cursor = page.next_cursor;
     }
+    Ok(all)
+}
 
+pub fn build_sitemap(posts: &[PostSummary], site_url: &str) -> String {
     let mut xml = String::from(
-        r#"<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-"#,
+        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\
+         <urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n",
     );
     xml.push_str(&format!(
-        "  <url><loc>{SITE_URL}/</loc><changefreq>daily</changefreq></url>\n"
+        "  <url><loc>{site_url}/</loc><changefreq>daily</changefreq></url>\n"
     ));
     xml.push_str(&format!(
-        "  <url><loc>{SITE_URL}/about</loc><changefreq>monthly</changefreq></url>\n"
+        "  <url><loc>{site_url}/about</loc><changefreq>monthly</changefreq></url>\n"
     ));
-    for (slug, published_at) in entries {
+    for p in posts {
         xml.push_str(&format!(
-            "  <url><loc>{SITE_URL}/posts/{slug}</loc>"
+            "  <url><loc>{site_url}/posts/{}</loc>",
+            xml_escape(&p.slug)
         ));
-        if !published_at.is_empty() {
-            xml.push_str(&format!("<lastmod>{published_at}</lastmod>"));
+        if !p.published_at.is_empty() {
+            xml.push_str(&format!("<lastmod>{}</lastmod>", xml_escape(&p.published_at)));
         }
         xml.push_str("</url>\n");
     }
     xml.push_str("</urlset>\n");
-
-    (
-        StatusCode::OK,
-        [(header::CONTENT_TYPE, "application/xml; charset=utf-8")],
-        xml,
-    )
-        .into_response()
+    xml
 }
 
-pub async fn rss_xml() -> impl IntoResponse {
-    let client = match Hashnode::from_env() {
-        Ok(c) => c,
-        Err(e) => {
-            tracing::error!(error = %e, "hashnode client init failed");
-            return error_response();
-        }
-    };
-    let page = match client.list_posts(None, 20).await {
-        Ok(p) => p,
-        Err(e) => {
-            tracing::error!(error = %e, "hashnode list_posts failed for rss");
-            return error_response();
-        }
-    };
-
+pub fn build_rss(posts: &[PostSummary], site_url: &str) -> String {
     let mut xml = String::from(
-        r#"<?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0"><channel>
-"#,
+        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<rss version=\"2.0\"><channel>\n",
     );
     xml.push_str("<title>zuihitsu · 随筆</title>\n");
-    xml.push_str(&format!("<link>{SITE_URL}/</link>\n"));
-    xml.push_str("<description>Personal tech essays</description>\n");
-    for p in page.posts {
+    xml.push_str(&format!("<link>{site_url}/</link>\n"));
+    xml.push_str("<description>Personal tech essays — Rust, infrastructure, systems</description>\n");
+    for p in posts {
         xml.push_str("<item>\n");
         xml.push_str(&format!("  <title>{}</title>\n", xml_escape(&p.title)));
         xml.push_str(&format!(
-            "  <link>{SITE_URL}/posts/{}</link>\n",
+            "  <link>{site_url}/posts/{}</link>\n",
             xml_escape(&p.slug)
         ));
         xml.push_str(&format!(
-            "  <guid isPermaLink=\"true\">{SITE_URL}/posts/{}</guid>\n",
+            "  <guid isPermaLink=\"true\">{site_url}/posts/{}</guid>\n",
             xml_escape(&p.slug)
         ));
         if !p.published_at.is_empty() {
-            xml.push_str(&format!("  <pubDate>{}</pubDate>\n", xml_escape(&p.published_at)));
+            xml.push_str(&format!(
+                "  <pubDate>{}</pubDate>\n",
+                xml_escape(&p.published_at)
+            ));
         }
-        xml.push_str(&format!("  <description>{}</description>\n", xml_escape(&p.brief)));
+        xml.push_str(&format!(
+            "  <description>{}</description>\n",
+            xml_escape(&p.brief)
+        ));
         xml.push_str("</item>\n");
     }
     xml.push_str("</channel></rss>\n");
+    xml
+}
 
+pub fn xml_escape(s: &str) -> String {
+    s.replace('&', "&amp;")
+        .replace('<', "&lt;")
+        .replace('>', "&gt;")
+        .replace('"', "&quot;")
+        .replace('\'', "&apos;")
+}
+
+// ---------- axum handlers (SSR path) ----------
+
+#[cfg(feature = "ssr")]
+pub async fn sitemap_xml() -> axum::response::Response {
+    use axum::http::{StatusCode, header};
+    use axum::response::IntoResponse;
+
+    let client = match Hashnode::from_env() {
+        Ok(c) => c,
+        Err(e) => return error_response(format!("hashnode init: {e}")),
+    };
+    let posts = match fetch_all_posts(&client).await {
+        Ok(p) => p,
+        Err(e) => return error_response(format!("hashnode list: {e}")),
+    };
     (
         StatusCode::OK,
-        [(header::CONTENT_TYPE, "application/rss+xml; charset=utf-8")],
-        xml,
+        [(header::CONTENT_TYPE, "application/xml; charset=utf-8")],
+        build_sitemap(&posts, &site_url()),
     )
         .into_response()
 }
 
-fn error_response() -> axum::response::Response {
+#[cfg(feature = "ssr")]
+pub async fn rss_xml() -> axum::response::Response {
+    use axum::http::{StatusCode, header};
+    use axum::response::IntoResponse;
+
+    let client = match Hashnode::from_env() {
+        Ok(c) => c,
+        Err(e) => return error_response(format!("hashnode init: {e}")),
+    };
+    let page = match client.list_posts(None, 20).await {
+        Ok(p) => p,
+        Err(e) => return error_response(format!("hashnode list: {e}")),
+    };
+    (
+        StatusCode::OK,
+        [(header::CONTENT_TYPE, "application/rss+xml; charset=utf-8")],
+        build_rss(&page.posts, &site_url()),
+    )
+        .into_response()
+}
+
+#[cfg(feature = "ssr")]
+fn error_response(msg: String) -> axum::response::Response {
+    use axum::http::{StatusCode, header};
+    use axum::response::IntoResponse;
+    tracing::error!(error = %msg, "feed endpoint failed");
     (
         StatusCode::SERVICE_UNAVAILABLE,
         [(header::CONTENT_TYPE, "text/plain")],
         "feed temporarily unavailable",
     )
         .into_response()
-}
-
-fn xml_escape(s: &str) -> String {
-    s.replace('&', "&amp;")
-        .replace('<', "&lt;")
-        .replace('>', "&gt;")
-        .replace('"', "&quot;")
-        .replace('\'', "&apos;")
 }

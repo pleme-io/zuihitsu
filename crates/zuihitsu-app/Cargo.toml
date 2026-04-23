@@ -14,6 +14,11 @@ name = "zuihitsu"
 path = "src/main.rs"
 required-features = ["ssr"]
 
+[[bin]]
+name = "zuihitsu-sitegen"
+path = "src/bin/sitegen.rs"
+required-features = ["sitegen"]
+
 [dependencies]
 leptos.workspace = true
 leptos_router.workspace = true
@@ -86,6 +91,15 @@ hydrate = [
     "dep:tracing-web",
     "leptos/hydrate",
     "leptos_router/hydrate",
+]
+# Static site generator (Cloudflare Pages target). Pulls the SSR-side deps
+# it needs without axum / leptos_axum / tower.
+sitegen = [
+    "dep:tokio",
+    "dep:reqwest",
+    "dep:pulldown-cmark",
+    "dep:anyhow",
+    "dep:tracing-subscriber",
 ]
 
 [lints]

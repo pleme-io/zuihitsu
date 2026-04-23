@@ -1,0 +1,28 @@
+name: zuihitsu
+provider: cloudflare
+
+templates:
+  - zuihitsu
+
+# Variables resolved at plan/apply time. Actual values live in the
+# pleme-io/nix private repo (SOPS-encrypted) and are injected via env.
+variables:
+  cloudflare_api_token:
+    source: env
+    env: CLOUDFLARE_API_TOKEN
+    sensitive: true
+  cloudflare_account_id:
+    source: env
+    env: CLOUDFLARE_ACCOUNT_ID
+  zone_name:
+    default: pleme.io
+  site_host:
+    default: blog.pleme.io
+  webhook_host:
+    default: webhook.blog.pleme.io
+
+# Workspace-level Freescape target — consumed by `freescape-check`.
+# FreescapeProvider::Cloudflare with the free-tier budget.
+freescape:
+  provider: cloudflare
+  profile: always-free

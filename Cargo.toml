@@ -1,5 +1,5 @@
 [workspace]
-members = ["crates/zuihitsu-app"]
+members = ["crates/zuihitsu-app", "crates/zuihitsu-worker"]
 resolver = "2"
 
 [workspace.package]

@@ -1,0 +1,9 @@
+source 'https://rubygems.org'
+
+gem 'pangea-core', '~> 0.2'
+gem 'pangea-cloudflare', '~> 0.1'
+gem 'terraform-synthesizer', '~> 0.0.28'
+
+group :development, :test do
+  gem 'rspec', '~> 3.12'
+end

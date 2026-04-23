@@ -1,0 +1,23 @@
+name = "zuihitsu-webhook"
+main = "build/worker/shim.mjs"
+compatibility_date = "2025-01-01"
+account_id = ""                    # set via env or Pangea-rendered Terraform
+workers_dev = false
+
+[build]
+command = "cargo install -q worker-build && worker-build --release"
+
+[vars]
+GITHUB_REPO = "pleme-io/zuihitsu"
+
+# Secrets (set via `wrangler secret put` or Pangea cloudflare_workers_secret):
+#   WEBHOOK_SECRET  — Hashnode HMAC secret (prefix whsec_)
+#   GITHUB_TOKEN    — fine-grained PAT with actions:write / contents:read
+
+[observability]
+enabled = true
+
+# Optional routes (prod); the Pangea template also renders these.
+# [[routes]]
+# pattern = "webhook.blog.pleme.io/*"
+# zone_name = "pleme.io"
