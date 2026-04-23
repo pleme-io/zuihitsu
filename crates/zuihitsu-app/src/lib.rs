@@ -1,0 +1,26 @@
+pub mod app;
+pub mod entities;
+pub mod features;
+pub mod infra;
+pub mod pages;
+pub mod providers;
+pub mod router;
+pub mod shared;
+pub mod widgets;
+
+#[cfg(feature = "hydrate")]
+#[wasm_bindgen::prelude::wasm_bindgen]
+pub fn hydrate() {
+    use crate::app::ZuihitsuApp;
+    console_error_panic_hook::set_once();
+    let fmt_layer = tracing_subscriber::fmt::layer()
+        .with_ansi(false)
+        .with_writer(tracing_web::MakeConsoleWriter)
+        .without_time();
+    use tracing_subscriber::layer::SubscriberExt;
+    use tracing_subscriber::util::SubscriberInitExt;
+    tracing_subscriber::registry().with(fmt_layer).init();
+
+    shared::sw::register_service_worker();
+    leptos::mount::hydrate_body(ZuihitsuApp);
+}

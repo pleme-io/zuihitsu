@@ -1,0 +1,44 @@
+# zuihitsu — forge product config.
+
+name: zuihitsu
+
+environment: staging
+cluster: plo
+
+k8s:
+  repo: git@github.com:pleme-io/k8s.git
+  local: ../k8s
+  branch: main
+
+prerelease:
+  frontend:
+    unit_tests: true
+  post_deploy:
+    smoke_queries: true
+    timeout_secs: 30
+    retries: 3
+
+release:
+  services:
+    - name: web
+      type: leptos
+      path: .
+  prerelease: true
+  dashboards: false
+  post_deploy: false
+
+dirs:
+  web: .
+  docs_arch: docs/arch
+
+endpoints:
+  staging:
+    health: https://blog.staging.pleme.io/healthz
+    site: https://blog.staging.pleme.io
+  production:
+    health: https://blog.pleme.io/healthz
+    site: https://blog.pleme.io
+
+observability:
+  dashboards:
+    enabled: false

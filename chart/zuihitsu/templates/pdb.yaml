@@ -1,0 +1,14 @@
+{{- if .Values.podDisruptionBudget.enabled -}}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "zuihitsu.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "zuihitsu.labels" . | nindent 4 }}
+spec:
+  minAvailable: {{ .Values.podDisruptionBudget.minAvailable }}
+  selector:
+    matchLabels:
+      {{- include "zuihitsu.selectorLabels" . | nindent 6 }}
+{{- end }}

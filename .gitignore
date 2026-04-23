@@ -1,0 +1,10 @@
+target/
+result
+result-*
+.direnv/
+.envrc.local
+node_modules/
+dist/
+pkg/
+*.swp
+.DS_Store

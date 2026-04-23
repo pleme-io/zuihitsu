@@ -1,0 +1,142 @@
+# zuihitsu — Leptos SSR blog.
+# All the SSR + WASM assets are baked into the OCI image by the substrate
+# leptos-build-flake; the axum binary serves both HTML and /pkg/*.
+
+replicaCount: 2
+
+image:
+  repository: ghcr.io/pleme-io/zuihitsu
+  pullPolicy: IfNotPresent
+  tag: ""  # defaults to .Chart.AppVersion
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "3000"
+  prometheus.io/path: "/metrics"
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 65534
+  runAsGroup: 65534
+  fsGroup: 65534
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL
+
+# -- Upstream Hashnode publication host (used by ZUIHITSU_HASHNODE_HOST).
+hashnode:
+  host: drzln.hashnode.dev
+
+# -- Runtime config for the axum server.
+config:
+  logLevel: info
+  siteAddr: "0.0.0.0:3000"
+
+service:
+  type: ClusterIP
+  port: 3000
+
+ports:
+  - name: http
+    containerPort: 3000
+    protocol: TCP
+
+# -- Liveness / readiness. Axum exposes /healthz and /readyz.
+probes:
+  liveness:
+    path: /healthz
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    failureThreshold: 3
+  readiness:
+    path: /readyz
+    initialDelaySeconds: 2
+    periodSeconds: 5
+    failureThreshold: 3
+  startup:
+    path: /readyz
+    initialDelaySeconds: 2
+    periodSeconds: 2
+    failureThreshold: 20
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 256Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 6
+  targetCPUUtilizationPercentage: 70
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+# -- Ingress. Defaults to blog.pleme.io with cert-manager TLS.
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+  hosts:
+    - host: blog.pleme.io
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: zuihitsu-tls
+      hosts:
+        - blog.pleme.io
+
+# -- NetworkPolicy. Deny-all default; allow nginx ingress + egress to
+# gql.hashnode.com (via cluster DNS + HTTPS) and DNS.
+networkPolicy:
+  enabled: true
+  allowDns: true
+  allowPrometheus: true
+  prometheusNamespace: monitoring
+  allowIngressFrom:
+    - namespace: ingress-nginx
+  # Egress to the Hashnode public API over 443.
+  allowEgressHttps: true
+
+# -- ServiceMonitor (Prometheus Operator). Disabled by default — axum doesn't
+# export /metrics yet; enable once a metrics layer is added.
+serviceMonitor:
+  enabled: false
+  interval: 30s
+  path: /metrics
+  labels: {}
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+topologySpreadConstraints:
+  - maxSkew: 1
+    topologyKey: kubernetes.io/hostname
+    whenUnsatisfiable: ScheduleAnyway
+    labelSelector:
+      matchLabels:
+        app.kubernetes.io/name: zuihitsu

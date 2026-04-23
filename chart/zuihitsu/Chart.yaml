@@ -1,0 +1,18 @@
+apiVersion: v2
+name: zuihitsu
+version: 0.1.0
+appVersion: "0.1.0"
+description: zuihitsu (随筆) — personal tech blog, Leptos SSR rendering Hashnode content
+type: application
+keywords:
+  - blog
+  - leptos
+  - ssr
+  - hashnode
+  - rust
+maintainers:
+  - name: pleme-io
+    url: https://github.com/pleme-io
+home: https://github.com/pleme-io/zuihitsu
+sources:
+  - https://github.com/pleme-io/zuihitsu
