@@ -4,15 +4,16 @@
 //! string interpolation. A single-author tech blog has ~5 template shapes;
 //! hand-rolled templates are predictable, fast, and easy to reason about.
 //!
-//! All templates share `shell()`, which inlines `style/main.css`, wires the
-//! PWA manifest, and renders the standard header/footer. Body content is
-//! page-specific.
+//! All templates share `shell()`, which inlines `style/kamon.css` (design
+//! tokens from the kamon flake input) + `style/main.css` (zuihitsu-specific
+//! layout), wires the PWA manifest, and renders the standard header/footer.
 
 use crate::entities::{Post, PostSummary, Tag};
 use crate::infra::feed::xml_escape;
 use crate::infra::utils::format::{format_short_date, reading_time_label};
 
-const BASE_CSS: &str = include_str!("../../../../style/main.css");
+const KAMON_CSS: &str = include_str!("../../../../style/kamon.css");
+const APP_CSS: &str = include_str!("../../../../style/main.css");
 
 pub struct Meta<'a> {
     pub title: &'a str,
@@ -62,7 +63,8 @@ fn shell(meta: &Meta, body: &str) -> String {
 <link rel="manifest" href="/manifest.json"/>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml"/>
 <link rel="alternate" type="application/rss+xml" title="zuihitsu" href="/rss.xml"/>
-<style>{css}</style>
+<style>{kamon_css}</style>
+<style>{app_css}</style>
 </head>
 <body>
 <header class="z-header">
@@ -88,7 +90,8 @@ fn shell(meta: &Meta, body: &str) -> String {
         og_type = meta.og_type,
         og_image = og_image_tag,
         canonical = canonical_tag,
-        css = BASE_CSS,
+        kamon_css = KAMON_CSS,
+        app_css = APP_CSS,
         body = body,
     )
 }

@@ -15,9 +15,17 @@
       url = "github:nix-community/crate2nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    # kamon — pleme-io design system. Currently pinned to a local path since
+    # the GitHub repo creation goes through pangea-github + repo-forge (see
+    # blackmatter-code memory feedback on IaC-first repo creation). Swap to
+    # `github:pleme-io/kamon` once the repo lands.
+    kamon = {
+      url = "path:../kamon";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  outputs = { self, nixpkgs, substrate, fenix, crate2nix, ... }:
+  outputs = { self, nixpkgs, substrate, fenix, crate2nix, kamon, ... }:
     let
       # Existing K3s path: substrate's Leptos SSR+CSR dual-build.
       leptosFlake = (import "${substrate}/lib/leptos-build-flake.nix" {
@@ -75,9 +83,28 @@
             ${script}
           ''}/bin/${name}";
         };
+        kamonBin = kamon.packages.${system}.default;
       in {
+        # ── Design tokens (kamon → every target) ──────────────────────────
+        tokens-css = mkApp "zuihitsu-tokens-css" ''
+          ${kamonBin}/bin/kamon render --target css --out style/kamon.css
+        '';
+        tokens-tailwind = mkApp "zuihitsu-tokens-tailwind" ''
+          ${kamonBin}/bin/kamon render --target tailwind --out tailwind.config.js
+        '';
+        tokens-hash = mkApp "zuihitsu-tokens-hash" ''
+          ${kamonBin}/bin/kamon hash
+        '';
+        tokens-sync = mkApp "zuihitsu-tokens-sync" ''
+          ${kamonBin}/bin/kamon render --target css --out style/kamon.css
+          ${kamonBin}/bin/kamon render --target svg --out public/favicon.svg
+          echo "synced kamon tokens → style/kamon.css + public/favicon.svg"
+        '';
+
         # ── Cloudflare Pages path ─────────────────────────────────────────
         generate = mkApp "zuihitsu-generate" ''
+          # Ensure kamon tokens are fresh before generation.
+          ${kamonBin}/bin/kamon render --target css --out style/kamon.css
           cargo build --release --features sitegen --bin zuihitsu-sitegen -p zuihitsu-app
           ./target/release/zuihitsu-sitegen "''${1:-dist}"
           echo "wrote dist/ — upload with: nix run .#pages-deploy"

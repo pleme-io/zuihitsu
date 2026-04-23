@@ -27,6 +27,7 @@ pub fn shell(options: LeptosOptions) -> impl IntoView {
                 <AutoReload options=options.clone()/>
                 <HydrationScripts options/>
                 <HashedStylesheet id="leptos" options=options.clone()/>
+                <style>{include_str!("../../../style/kamon.css")}</style>
                 <style>{include_str!("../../../style/main.css")}</style>
                 <MetaTags/>
             </head>
