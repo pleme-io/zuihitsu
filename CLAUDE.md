@@ -29,7 +29,7 @@ GitHub Actions
   wrangler pages deploy dist/ --project-name zuihitsu
      │
      ▼
-Cloudflare Pages (blog.pleme.io)
+Cloudflare Pages (blog.quero.cloud)
   static HTML, served from edge
 ```
 
@@ -88,9 +88,10 @@ nix run .#worker-build           # compile crates/zuihitsu-worker/ → .wasm + s
 nix run .#worker-deploy          # wrangler deploy
 nix run .#freescape-check        # validate fit against Cloudflare free tier
 
-# Pangea IaC (pleme.io zone + Pages + Worker) lives in pangea-architectures:
+# Pangea IaC (quero.cloud zone + Pages + Worker + Porkbun NS delegation)
+# lives in pangea-architectures:
 #   cd ../pangea-architectures/workspaces/cloudflare-pleme
-#   bundle exec pangea {synth,plan,apply,destroy} pleme_io.rb
+#   bundle exec pangea {synth,plan,apply,destroy} quero_cloud.rb
 
 # K3s path
 nix build                        # combined SSR binary + CSR WASM + docker image
@@ -105,7 +106,7 @@ nix develop                      # fenix + cargo + wasm-bindgen + wrangler + rub
 | Env | Default | Used by |
 |-----|---------|---------|
 | `ZUIHITSU_HASHNODE_HOST` | `drzln.hashnode.dev` | sitegen, SSR |
-| `ZUIHITSU_SITE_URL` | `https://blog.pleme.io` | sitegen, SSR, sitemap, RSS |
+| `ZUIHITSU_SITE_URL` | `https://blog.quero.cloud` | sitegen, SSR, sitemap, RSS |
 | `LEPTOS_SITE_ADDR` | `0.0.0.0:3000` | SSR |
 | `LEPTOS_SITE_ROOT` | `/static` | SSR |
 | `RUST_LOG` | `info,zuihitsu=debug` | both |
@@ -121,7 +122,7 @@ nix develop                      # fenix + cargo + wasm-bindgen + wrangler + rub
 ### Pangea IaC
 
 Zone + Pages + Worker are declared in
-`pangea-architectures/workspaces/cloudflare-pleme/pleme_io.rb`, a thin
+`pangea-architectures/workspaces/cloudflare-pleme/quero_cloud.rb`, a thin
 template that calls `Pangea::Architectures::CloudflareHeadlessBlog`. It
 shares state, credentials, and the import workflow with the other three
 Cloudflare-account templates (lilitu, novaskyn, tunnel) in that workspace.
@@ -130,8 +131,8 @@ Cloudflare-account templates (lilitu, novaskyn, tunnel) in that workspace.
 |-----|--------|
 | `CLOUDFLARE_API_TOKEN` | `sops -d --extract '["cloudflare"]["api-token"]' ../nix/secrets.yaml` |
 | `CLOUDFLARE_ACCOUNT_ID` | ENV, default baked into template (`97d01f39d2967f21320f41bf71249ed1`) |
-| `SITE_HOST` | ENV, default `blog.pleme.io` |
-| `WEBHOOK_HOST` | ENV, default `webhook.blog.pleme.io` |
+| `SITE_HOST` | ENV, default `blog.quero.cloud` |
+| `WEBHOOK_HOST` | ENV, default `webhook.blog.quero.cloud` |
 
 ## Freescape
 

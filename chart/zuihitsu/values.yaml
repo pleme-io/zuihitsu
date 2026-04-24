@@ -92,7 +92,7 @@ podDisruptionBudget:
   enabled: true
   minAvailable: 1
 
-# -- Ingress. Defaults to blog.pleme.io with cert-manager TLS.
+# -- Ingress. Defaults to blog.quero.cloud with cert-manager TLS.
 ingress:
   enabled: true
   className: nginx
@@ -100,14 +100,14 @@ ingress:
     cert-manager.io/cluster-issuer: letsencrypt-prod
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
   hosts:
-    - host: blog.pleme.io
+    - host: blog.quero.cloud
       paths:
         - path: /
           pathType: Prefix
   tls:
     - secretName: zuihitsu-tls
       hosts:
-        - blog.pleme.io
+        - blog.quero.cloud
 
 # -- NetworkPolicy. Deny-all default; allow nginx ingress + egress to
 # gql.hashnode.com (via cluster DNS + HTTPS) and DNS.

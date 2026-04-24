@@ -9,7 +9,3 @@ dist/
 pkg/
 *.swp
 .DS_Store
-
-# Pangea bundler workspace — Gemfile.lock is tracked, vendor/bundle/.bundle are not.
-pangea/vendor/
-pangea/.bundle/

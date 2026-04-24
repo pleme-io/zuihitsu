@@ -9,7 +9,7 @@ use crate::entities::PostSummary;
 use crate::infra::graphql::client::Hashnode;
 use crate::infra::utils::xml::xml_escape;
 
-const DEFAULT_SITE_URL: &str = "https://blog.pleme.io";
+const DEFAULT_SITE_URL: &str = "https://blog.quero.cloud";
 
 pub fn site_url() -> String {
     std::env::var("ZUIHITSU_SITE_URL").unwrap_or_else(|_| DEFAULT_SITE_URL.to_string())

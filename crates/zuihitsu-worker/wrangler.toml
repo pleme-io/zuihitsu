@@ -19,5 +19,5 @@ enabled = true
 
 # Optional routes (prod); the Pangea template also renders these.
 # [[routes]]
-# pattern = "webhook.blog.pleme.io/*"
-# zone_name = "pleme.io"
+# pattern = "webhook.blog.quero.cloud/*"
+# zone_name = "quero.cloud"

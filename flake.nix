@@ -127,7 +127,7 @@
         # Pangea IaC moved to pangea-architectures/workspaces/cloudflare-pleme.
         # Run pangea commands from that workspace instead:
         #   cd ../pangea-architectures/workspaces/cloudflare-pleme
-        #   bundle exec pangea {synth,plan,apply,destroy} pleme_io.rb
+        #   bundle exec pangea {synth,plan,apply,destroy} quero_cloud.rb
 
         # ── Freescape fit check (arch-synthesizer) ────────────────────────
         freescape-check = mkApp "zuihitsu-freescape-check" ''
@@ -138,7 +138,7 @@
           echo "R2: 10GB + 0 egress"
           echo ""
           echo "TODO: wire arch-synthesizer FreescapeCheck against"
-          echo "      pangea-architectures/workspaces/cloudflare-pleme/pleme_io.rb"
+          echo "      pangea-architectures/workspaces/cloudflare-pleme/quero_cloud.rb"
           echo "      once pangea emits a WasmWorkloadDecl sidecar."
         '';
       };
