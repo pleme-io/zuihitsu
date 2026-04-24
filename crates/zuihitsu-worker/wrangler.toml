@@ -1,11 +1,14 @@
 name = "zuihitsu-webhook"
 main = "build/worker/shim.mjs"
 compatibility_date = "2025-01-01"
-account_id = ""                    # set via env or Pangea-rendered Terraform
+# account_id intentionally omitted — wrangler reads CLOUDFLARE_ACCOUNT_ID
+# from env (see ../../flake.nix#worker-deploy for the defaulted value).
 workers_dev = false
 
-[build]
-command = "cargo install -q worker-build && worker-build --release"
+# The build step is intentionally NOT declared here. `nix run .#worker-build`
+# owns the compile (handles $PATH + pinned worker-build version), and
+# `nix run .#worker-deploy` uploads the pre-built build/ as-is. Keeping the
+# two steps separate avoids PATH drama inside wrangler's build-command shell.
 
 [vars]
 GITHUB_REPO = "pleme-io/zuihitsu"
@@ -17,7 +20,7 @@ GITHUB_REPO = "pleme-io/zuihitsu"
 [observability]
 enabled = true
 
-# Optional routes (prod); the Pangea template also renders these.
-# [[routes]]
-# pattern = "webhook.blog.quero.cloud/*"
-# zone_name = "quero.cloud"
+# Routes are managed by Terraform, not wrangler — see
+# pangea-architectures/workspaces/cloudflare-pleme/domains/quero.cloud.yaml's
+# pages_worker block (dispatched to CloudflareHeadlessBlog, which emits the
+# cloudflare_workers_route resource pointing at webhook.blog.quero.cloud/*).

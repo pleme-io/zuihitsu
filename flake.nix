@@ -113,14 +113,35 @@
         '';
 
         # ── Cloudflare Worker path ────────────────────────────────────────
+        #
+        # `worker-build` lives on crates.io, not in nixpkgs, so we `cargo
+        # install` it on first use into $HOME/.cargo/bin. The subsequent
+        # `worker-build --release` invocation needs that path to be visible,
+        # so prepend it to PATH before anything else.
+        #
+        # Version pin: the `worker` crate line we use (0.5) is compatible
+        # with worker-build ^0.1. worker-build 0.8+ requires worker >= 0.8.
+        # Bump the pin below the day we upgrade `worker` in Cargo.toml.
         worker-build = mkApp "zuihitsu-worker-build" ''
+          export PATH="$HOME/.cargo/bin:$PATH"
           cd crates/zuihitsu-worker
           if ! command -v worker-build >/dev/null 2>&1; then
-            cargo install -q --locked worker-build
+            cargo install -q --locked "worker-build@^0.1"
           fi
           worker-build --release
         '';
         worker-deploy = mkApp "zuihitsu-worker-deploy" ''
+          # CLOUDFLARE_ACCOUNT_ID — wrangler reads it from env; wrangler.toml
+          # intentionally omits `account_id =` so this is the single source.
+          # Decrypt CLOUDFLARE_API_TOKEN ahead of time from the nix sops file:
+          #   export CLOUDFLARE_API_TOKEN=$(cd ../nix && \
+          #     sops -d --extract '["cloudflare"]["api-token"]' secrets.yaml)
+          : "''${CLOUDFLARE_API_TOKEN?must be set (see header)}"
+          : "''${CLOUDFLARE_ACCOUNT_ID:=97d01f39d2967f21320f41bf71249ed1}"
+          export CLOUDFLARE_ACCOUNT_ID
+          [[ -d crates/zuihitsu-worker/build ]] || {
+            echo "no build/ — run: nix run .#worker-build" >&2; exit 1;
+          }
           wrangler deploy --config crates/zuihitsu-worker/wrangler.toml
         '';
 
