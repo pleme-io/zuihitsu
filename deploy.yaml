@@ -10,7 +10,10 @@ render_targets:
   cloudflare-pages:
     active: true                       # freescape-native, $0/mo
     type: cloudflare
-    pangea: pangea/zuihitsu.rb
+    # IaC lives in pangea-architectures/workspaces/cloudflare-pleme/pleme_io.rb
+    # (pleme.io zone + Pages project + Worker, all expressed as architecture
+    # calls in a single template). No longer lives under zuihitsu/.
+    pangea: ../pangea-architectures/workspaces/cloudflare-pleme/pleme_io.rb
     freescape:
       provider: cloudflare
       profile: always-free
@@ -18,7 +21,8 @@ render_targets:
       generate: "nix run .#generate"
       upload:   "nix run .#pages-deploy"
       worker:   "nix run .#worker-deploy"
-      iac:      "nix run .#pangea-apply"
+      # IaC: `cd ../pangea-architectures/workspaces/cloudflare-pleme && bundle exec pangea apply pleme_io.rb`
+      iac: "cd ../pangea-architectures/workspaces/cloudflare-pleme && bundle exec pangea apply pleme_io.rb"
     endpoints:
       site: https://blog.pleme.io
       webhook: https://webhook.blog.pleme.io/webhook

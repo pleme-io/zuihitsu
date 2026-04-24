@@ -15,14 +15,12 @@
       url = "github:nix-community/crate2nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    # ishou — pleme-io design system. Currently pinned to a local path since
-    # the GitHub repo creation goes through pangea-github + repo-forge (see
-    # blackmatter-code memory feedback on IaC-first repo creation). Swap to
-    # `github:pleme-io/ishou` once the repo lands.
-    ishou = {
-      url = "path:../ishou";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+    # ishou — pleme-io design system, consumed from FlakeHub. The repo is
+    # public (pleme-io-opensource/org.yaml) and publishes to FlakeHub via
+    # substrate's reusable-flakehub.yml on every push to main. `fh:` lets
+    # the flake input track rolling versions without pinning a commit.
+    ishou.url = "https://flakehub.com/f/pleme-io/ishou/*.tar.gz";
+    ishou.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   outputs = { self, nixpkgs, substrate, fenix, crate2nix, ishou, ... }:
@@ -68,7 +66,7 @@
           pkgs.wasm-bindgen-cli
           pkgs.binaryen
           pkgs.nodejs_20
-          pkgs.nodePackages.wrangler
+          pkgs.wrangler
           pkgs.bundler
           pkgs.ruby_3_3
           pkgs.opentofu
@@ -126,19 +124,10 @@
           wrangler deploy --config crates/zuihitsu-worker/wrangler.toml
         '';
 
-        # ── Pangea (Cloudflare IaC) ───────────────────────────────────────
-        pangea-install = mkApp "zuihitsu-pangea-install" ''
-          cd pangea && bundle install --path .bundle
-        '';
-        pangea-synth = mkApp "zuihitsu-pangea-synth" ''
-          cd pangea && bundle exec pangea synth zuihitsu.rb
-        '';
-        pangea-plan = mkApp "zuihitsu-pangea-plan" ''
-          cd pangea && bundle exec pangea plan zuihitsu.rb
-        '';
-        pangea-apply = mkApp "zuihitsu-pangea-apply" ''
-          cd pangea && bundle exec pangea apply zuihitsu.rb
-        '';
+        # Pangea IaC moved to pangea-architectures/workspaces/cloudflare-pleme.
+        # Run pangea commands from that workspace instead:
+        #   cd ../pangea-architectures/workspaces/cloudflare-pleme
+        #   bundle exec pangea {synth,plan,apply,destroy} pleme_io.rb
 
         # ── Freescape fit check (arch-synthesizer) ────────────────────────
         freescape-check = mkApp "zuihitsu-freescape-check" ''
@@ -148,7 +137,8 @@
           echo "DNS + TLS: free"
           echo "R2: 10GB + 0 egress"
           echo ""
-          echo "TODO: wire arch-synthesizer FreescapeCheck against pangea/zuihitsu.rb"
+          echo "TODO: wire arch-synthesizer FreescapeCheck against"
+          echo "      pangea-architectures/workspaces/cloudflare-pleme/pleme_io.rb"
           echo "      once pangea emits a WasmWorkloadDecl sidecar."
         '';
       };

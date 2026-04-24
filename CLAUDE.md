@@ -56,7 +56,8 @@ zuihitsu/
 │   │       ├── shared/               server_fns, hooks, sw
 │   │       └── static_render/        pure-string HTML for sitegen
 │   └── zuihitsu-worker/              Cloudflare Worker (crate-type cdylib)
-├── pangea/                           Pangea Cloudflare IaC (Ruby)
+│                                     (IaC lives in pangea-architectures —
+│                                      see "Pangea IaC" below)
 ├── chart/zuihitsu/                   Helm chart (K3s path)
 ├── k8s-manifests/                    FluxCD HelmRelease template
 ├── style/main.css                    Nord palette, inlined by sitegen + SSR
@@ -85,9 +86,11 @@ nix run .#generate               # fetch Hashnode, write dist/
 nix run .#pages-deploy           # wrangler pages deploy dist/
 nix run .#worker-build           # compile crates/zuihitsu-worker/ → .wasm + shim
 nix run .#worker-deploy          # wrangler deploy
-nix run .#pangea-render          # zuihitsu.rb → terraform.tf.json
-nix run .#pangea-apply           # tofu apply
 nix run .#freescape-check        # validate fit against Cloudflare free tier
+
+# Pangea IaC (pleme.io zone + Pages + Worker) lives in pangea-architectures:
+#   cd ../pangea-architectures/workspaces/cloudflare-pleme
+#   bundle exec pangea {synth,plan,apply,destroy} pleme_io.rb
 
 # K3s path
 nix build                        # combined SSR binary + CSR WASM + docker image
@@ -115,22 +118,28 @@ nix develop                      # fenix + cargo + wasm-bindgen + wrangler + rub
 | `GITHUB_TOKEN` | fine-grained PAT, repo `pleme-io/zuihitsu`, `contents:read` + `actions:write` |
 | `GITHUB_REPO` | `pleme-io/zuihitsu` (var, not secret) |
 
-### Pangea variables (pangea/pangea.yml)
+### Pangea IaC
+
+Zone + Pages + Worker are declared in
+`pangea-architectures/workspaces/cloudflare-pleme/pleme_io.rb`, a thin
+template that calls `Pangea::Architectures::CloudflareHeadlessBlog`. It
+shares state, credentials, and the import workflow with the other three
+Cloudflare-account templates (lilitu, novaskyn, tunnel) in that workspace.
 
 | Var | Source |
 |-----|--------|
-| `CLOUDFLARE_API_TOKEN` | env / SOPS |
-| `CLOUDFLARE_ACCOUNT_ID` | env / SOPS |
-| `zone_name` | default `pleme.io` |
-| `site_host` | default `blog.pleme.io` |
-| `webhook_host` | default `webhook.blog.pleme.io` |
+| `CLOUDFLARE_API_TOKEN` | `sops -d --extract '["cloudflare"]["api-token"]' ../nix/secrets.yaml` |
+| `CLOUDFLARE_ACCOUNT_ID` | ENV, default baked into template (`97d01f39d2967f21320f41bf71249ed1`) |
+| `SITE_HOST` | ENV, default `blog.pleme.io` |
+| `WEBHOOK_HOST` | ENV, default `webhook.blog.pleme.io` |
 
 ## Freescape
 
 The Cloudflare target is declared as `freescape.provider: cloudflare`,
-`profile: always-free` in `pangea/pangea.yml`. The `arch-synthesizer` crate
-has `FreescapeBudget` + `FreescapeCheck` — wire them up against the Pangea
-output with `nix run .#freescape-check`. Overage = build break.
+`profile: always-free` on the `cloudflare-pages` render target in
+`deploy.yaml`. The `arch-synthesizer` crate has `FreescapeBudget` +
+`FreescapeCheck` — wire them up against the Pangea output with
+`nix run .#freescape-check`. Overage = build break.
 
 ## Adding a new page
 
