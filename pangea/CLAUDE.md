@@ -4,7 +4,9 @@ Pangea workspace for the Cloudflare-native deploy path.
 
 ## What this renders
 
-`zuihitsu.rb` declares:
+`zuihitsu.rb` is a Layer-3 template: its body is a single call to
+`Pangea::Architectures::CloudflareHeadlessBlog.build` (Layer 2,
+pangea-architectures). The architecture emits:
 
 | Resource | Purpose |
 |---|---|
@@ -15,6 +17,11 @@ Pangea workspace for the Cloudflare-native deploy path.
 | `cloudflare_workers_script zuihitsu_webhook` | Webhook receiver (WASM uploaded via wrangler) |
 | `cloudflare_workers_route zuihitsu_webhook_route` | `webhook.blog.pleme.io/*` → worker |
 | `cloudflare_dns_record webhook_cname` | Worker AAAA record |
+
+`site_record_id: :blog_cname` and `webhook_record_id: :webhook_cname` pin
+the two DNS record IDs — without them, the architecture would default to
+slug-derived identifiers (`zuihitsu_site_cname`, `zuihitsu_webhook_cname`)
+and Terraform would drop-and-recreate the records on first apply.
 
 ## Ownership boundary
 

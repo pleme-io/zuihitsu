@@ -4,8 +4,22 @@ source 'https://rubygems.org'
 # pangea-architectures workspaces. Keeps us on the current pangea-core 0.2 line
 # (the rubygems.org-published pangea-cloudflare 0.1.0 still pins pangea-core
 # ~> 0.1, which conflicts).
-gem 'pangea-core',       path: '../../pangea-core'
-gem 'pangea-cloudflare', path: '../../pangea-cloudflare'
+#
+# pangea-architectures' gemspec pulls in every provider gem as a runtime
+# dependency; because most of them aren't published to rubygems.org we need
+# to declare each as a path gem here so bundler can resolve the graph.
+gem 'pangea-core',           path: '../../pangea-core'
+gem 'pangea-akeyless',       path: '../../pangea-akeyless'
+gem 'pangea-aws',            path: '../../pangea-aws'
+gem 'pangea-azure',          path: '../../pangea-azure'
+gem 'pangea-cloudflare',     path: '../../pangea-cloudflare'
+gem 'pangea-datadog',        path: '../../pangea-datadog'
+gem 'pangea-gcp',            path: '../../pangea-gcp'
+gem 'pangea-hcloud',         path: '../../pangea-hcloud'
+gem 'pangea-splunk',         path: '../../pangea-splunk'
+gem 'pangea-kubernetes',     path: '../../pangea-kubernetes'
+gem 'pangea-spot',           path: '../../pangea-spot'
+gem 'pangea-architectures',  path: '../../pangea-architectures'
 gem 'terraform-synthesizer', '~> 0.0.28'
 
 group :development, :test do

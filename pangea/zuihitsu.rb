@@ -8,6 +8,11 @@
 #
 # Rendered via pangea-cloudflare → Terraform JSON → tofu apply.
 #
+# The template body is a single call to
+# Pangea::Architectures::CloudflareHeadlessBlog — the same pattern is reused
+# for any future Pages+Worker blog. site_record_id/webhook_record_id pin the
+# existing zuihitsu Terraform state IDs so the refactor is a no-op for tofu.
+#
 # Configuration resolves from:
 #   - ENV overrides (CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID, ZONE_NAME,
 #     SITE_HOST, WEBHOOK_HOST)
@@ -19,6 +24,7 @@
 
 require 'pangea-core'
 require 'pangea-cloudflare'
+require 'pangea/architectures'
 require 'digest'
 
 template :zuihitsu do
@@ -30,100 +36,22 @@ template :zuihitsu do
   site_host    = ENV.fetch('SITE_HOST',    'blog.pleme.io')
   webhook_host = ENV.fetch('WEBHOOK_HOST', 'webhook.blog.pleme.io')
 
-  extend(Pangea::Resources::Cloudflare) unless respond_to?(:cloudflare_zone)
-
   provider :cloudflare, api_token: api_token
 
-  zone = cloudflare_zone(
-    :pleme_io,
-    {
-      account: { id: account },
-      name: zone_name,
-      type: 'full'
-    }
-  )
-
-  # ── Pages (static site) ──────────────────────────────────────────
-  # The site bundle is produced by `nix run .#generate` in the zuihitsu
-  # repo and uploaded to Pages via GHA (wrangler pages deploy dist/).
-  # Terraform owns the PROJECT + DOMAIN; uploads are out-of-band.
-  pages = cloudflare_pages_project(
-    :zuihitsu,
-    {
-      account_id: account,
-      name: 'zuihitsu',
-      production_branch: 'main',
-      build_config: {
-        build_command: '',
-        destination_dir: 'dist',
-        root_dir: ''
-      },
-      deployment_configs: {
-        production: {
-          env_vars: {
-            ZUIHITSU_SITE_URL: { type: 'plain_text', value: "https://#{site_host}" }
-          }
-        }
-      }
-    }
-  )
-
-  cloudflare_pages_domain(
-    :zuihitsu_apex,
-    {
-      account_id: account,
-      project_name: 'zuihitsu',
-      name: site_host
-    }
-  )
-
-  cloudflare_dns_record(
-    :blog_cname,
-    {
-      zone_id: zone.id,
-      name: site_host,
-      type: 'CNAME',
-      content: pages.subdomain,
-      ttl: 1,
-      proxied: true
-    }
-  )
-
-  # ── Worker (Hashnode webhook → GHA dispatch) ─────────────────────
-  # Content is uploaded separately by the zuihitsu worker-deploy flow
-  # (cargo worker-build → wrangler deploy). This resource reserves the
-  # script name + bindings; Terraform won't push WASM bytes here.
-  webhook = cloudflare_workers_script(
-    :zuihitsu_webhook,
-    {
-      account_id: account,
-      script_name: 'zuihitsu-webhook',
-      main_module: 'shim.mjs',
-      compatibility_date: '2025-01-01',
-      observability: { enabled: true, head_sampling_rate: 1 }
-    }
-  )
-
-  cloudflare_workers_route(
-    :zuihitsu_webhook_route,
-    {
-      zone_id: zone.id,
-      pattern: "#{webhook_host}/*",
-      script: webhook.script_name
-    }
-  )
-
-  cloudflare_dns_record(
-    :webhook_cname,
-    {
-      zone_id: zone.id,
-      name: webhook_host,
-      type: 'AAAA',
-      content: '100::',
-      ttl: 1,
-      proxied: true
-    }
-  )
+  Pangea::Architectures::CloudflareHeadlessBlog.build(self, {
+    account_id: account,
+    zone_name: zone_name,
+    slug: 'zuihitsu',
+    site_host: site_host,
+    webhook_host: webhook_host,
+    env_vars: {
+      ZUIHITSU_SITE_URL: { type: 'plain_text', value: "https://#{site_host}" }
+    },
+    # Pin the pre-architecture Terraform state IDs so this refactor does not
+    # drop-and-recreate the two DNS records.
+    site_record_id: :blog_cname,
+    webhook_record_id: :webhook_cname
+  })
 
   output :pangea_fingerprint do
     value template_fingerprint

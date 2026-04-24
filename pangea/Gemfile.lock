@@ -1,4 +1,48 @@
 PATH
+  remote: ../../pangea-akeyless
+  specs:
+    pangea-akeyless (0.1.0)
+      dry-struct (~> 1.6)
+      dry-types (~> 1.7)
+      pangea-core (~> 0.2)
+      terraform-synthesizer (~> 0.0.28)
+
+PATH
+  remote: ../../pangea-architectures
+  specs:
+    pangea-architectures (0.1.0)
+      pangea-akeyless
+      pangea-aws
+      pangea-azure
+      pangea-cloudflare
+      pangea-core (~> 0.2)
+      pangea-datadog
+      pangea-gcp
+      pangea-hcloud
+      pangea-kubernetes
+      pangea-splunk
+      pangea-spot
+      terraform-synthesizer (~> 0.0.28)
+
+PATH
+  remote: ../../pangea-aws
+  specs:
+    pangea-aws (0.2.0)
+      dry-struct (~> 1.6)
+      dry-types (~> 1.7)
+      pangea-core (~> 0.2)
+      terraform-synthesizer (~> 0.0.28)
+
+PATH
+  remote: ../../pangea-azure
+  specs:
+    pangea-azure (0.1.0)
+      dry-struct (~> 1.6)
+      dry-types (~> 1.7)
+      pangea-core (~> 0.2)
+      terraform-synthesizer (~> 0.0.28)
+
+PATH
   remote: ../../pangea-cloudflare
   specs:
     pangea-cloudflare (0.1.0)
@@ -15,6 +59,61 @@ PATH
       dry-struct (~> 1.6)
       dry-types (~> 1.7)
       terraform-synthesizer (>= 0.0.28)
+
+PATH
+  remote: ../../pangea-datadog
+  specs:
+    pangea-datadog (0.1.0)
+      dry-struct (~> 1.6)
+      dry-types (~> 1.7)
+      pangea-core (~> 0.2)
+      terraform-synthesizer (~> 0.0.28)
+
+PATH
+  remote: ../../pangea-gcp
+  specs:
+    pangea-gcp (0.1.0)
+      dry-struct (~> 1.6)
+      dry-types (~> 1.7)
+      pangea-core (~> 0.2)
+      terraform-synthesizer (~> 0.0.28)
+
+PATH
+  remote: ../../pangea-hcloud
+  specs:
+    pangea-hcloud (0.1.0)
+      dry-struct (~> 1.6)
+      dry-types (~> 1.7)
+      pangea-core (~> 0.2)
+      terraform-synthesizer (~> 0.0.28)
+
+PATH
+  remote: ../../pangea-kubernetes
+  specs:
+    pangea-kubernetes (0.1.0)
+      dry-struct (~> 1.6)
+      dry-types (~> 1.7)
+      pangea-core (~> 0.2)
+      terraform-synthesizer (~> 0.0.28)
+
+PATH
+  remote: ../../pangea-splunk
+  specs:
+    pangea-splunk (0.1.0)
+      dry-struct (~> 1.6)
+      dry-types (~> 1.7)
+      pangea-core (~> 0.2)
+      terraform-synthesizer (~> 0.0.28)
+
+PATH
+  remote: ../../pangea-spot
+  specs:
+    pangea-spot (0.1.0)
+      dry-struct (~> 1.6)
+      dry-types (~> 1.7)
+      pangea-aws (~> 0.1)
+      pangea-core (~> 0.2)
+      terraform-synthesizer (~> 0.0.28)
 
 GEM
   remote: https://rubygems.org/
@@ -70,8 +169,18 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  pangea-akeyless!
+  pangea-architectures!
+  pangea-aws!
+  pangea-azure!
   pangea-cloudflare!
   pangea-core!
+  pangea-datadog!
+  pangea-gcp!
+  pangea-hcloud!
+  pangea-kubernetes!
+  pangea-splunk!
+  pangea-spot!
   rspec (~> 3.12)
   terraform-synthesizer (~> 0.0.28)
 
