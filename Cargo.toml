@@ -20,7 +20,7 @@ chrono = { version = "0.4", default-features = false, features = ["serde", "cloc
 thiserror = "2"
 
 # Hydrate-side (wasm32)
-wasm-bindgen = "=0.2.99"
+wasm-bindgen = "=0.2.105"
 wasm-bindgen-futures = "0.4"
 web-sys = { version = "0.3", features = [
     "Window", "Document", "Navigator", "Storage",
