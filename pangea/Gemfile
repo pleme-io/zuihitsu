@@ -1,7 +1,11 @@
 source 'https://rubygems.org'
 
-gem 'pangea-core', '~> 0.2'
-gem 'pangea-cloudflare', '~> 0.1'
+# Path gems against the workspace siblings — matches the convention used by
+# pangea-architectures workspaces. Keeps us on the current pangea-core 0.2 line
+# (the rubygems.org-published pangea-cloudflare 0.1.0 still pins pangea-core
+# ~> 0.1, which conflicts).
+gem 'pangea-core',       path: '../../pangea-core'
+gem 'pangea-cloudflare', path: '../../pangea-cloudflare'
 gem 'terraform-synthesizer', '~> 0.0.28'
 
 group :development, :test do

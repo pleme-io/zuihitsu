@@ -1,3 +1,4 @@
+use leptos::either::EitherOf3;
 use leptos::prelude::*;
 use leptos_meta::{Meta, Title};
 use leptos_router::hooks::use_params_map;
@@ -23,7 +24,7 @@ pub fn PostPage() -> impl IntoView {
                             let desc = p.seo.as_ref()
                                 .and_then(|s| s.description.clone())
                                 .unwrap_or_else(|| p.brief.clone());
-                            Either::Left(view! {
+                            EitherOf3::A(view! {
                                 <Title text=title/>
                                 <Meta name="description" content=desc.clone()/>
                                 <Meta property="og:title" content=p.title.clone()/>
@@ -34,11 +35,11 @@ pub fn PostPage() -> impl IntoView {
                                 <Article post=p/>
                             })
                         }
-                        Ok(None) => Either::Right(view! {
+                        Ok(None) => EitherOf3::B(view! {
                             <Title text="Not found · zuihitsu"/>
                             <div class="z-empty">"Post not found."</div>
                         }),
-                        Err(e) => Either::Right(view! {
+                        Err(e) => EitherOf3::C(view! {
                             <Title text="Error · zuihitsu"/>
                             <div class="z-empty">{format!("Failed to load post: {e}")}</div>
                         }),

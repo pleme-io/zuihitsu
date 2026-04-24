@@ -7,19 +7,32 @@
 # pointed at the Pages custom domain.
 #
 # Rendered via pangea-cloudflare → Terraform JSON → tofu apply.
+#
+# Configuration resolves from:
+#   - ENV overrides (CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID, ZONE_NAME,
+#     SITE_HOST, WEBHOOK_HOST)
+#   - workspace pangea.yml / root pangea.yml (via Pangea::WorkspaceConfig)
+# This matches the canonical pleme-io template pattern (see pangea-core
+# CLAUDE.md → Template Pattern). `var(...)` is deliberately not used here —
+# it emits `${var.foo}` terraform refs, but we resolve at synthesis time
+# against ENV + workspace config instead.
 
-require 'pangea'
+require 'pangea-core'
 require 'pangea-cloudflare'
+require 'digest'
 
 template :zuihitsu do
-  provider :cloudflare do
-    api_token var(:cloudflare_api_token)
-  end
+  template_fingerprint = Digest::SHA256.hexdigest(File.read(__FILE__))
 
-  account = var(:cloudflare_account_id)
-  zone_name = var(:zone_name, default: 'pleme.io')
-  site_host = var(:site_host, default: 'blog.pleme.io')
-  webhook_host = var(:webhook_host, default: 'webhook.blog.pleme.io')
+  api_token    = ENV.fetch('CLOUDFLARE_API_TOKEN')   { raise 'CLOUDFLARE_API_TOKEN not set' }
+  account      = ENV.fetch('CLOUDFLARE_ACCOUNT_ID')  { raise 'CLOUDFLARE_ACCOUNT_ID not set' }
+  zone_name    = ENV.fetch('ZONE_NAME',    'pleme.io')
+  site_host    = ENV.fetch('SITE_HOST',    'blog.pleme.io')
+  webhook_host = ENV.fetch('WEBHOOK_HOST', 'webhook.blog.pleme.io')
+
+  extend(Pangea::Resources::Cloudflare) unless respond_to?(:cloudflare_zone)
+
+  provider :cloudflare, api_token: api_token
 
   zone = cloudflare_zone(
     :pleme_io,
@@ -59,7 +72,7 @@ template :zuihitsu do
     :zuihitsu_apex,
     {
       account_id: account,
-      project_name: pages.name,
+      project_name: 'zuihitsu',
       name: site_host
     }
   )
@@ -70,8 +83,8 @@ template :zuihitsu do
       zone_id: zone.id,
       name: site_host,
       type: 'CNAME',
-      content: "#{pages.subdomain}",
-      ttl: 1,        # automatic
+      content: pages.subdomain,
+      ttl: 1,
       proxied: true
     }
   )
@@ -106,9 +119,14 @@ template :zuihitsu do
       zone_id: zone.id,
       name: webhook_host,
       type: 'AAAA',
-      content: '100::',   # Cloudflare Workers placeholder address
+      content: '100::',
       ttl: 1,
       proxied: true
     }
   )
+
+  output :pangea_fingerprint do
+    value template_fingerprint
+    description "SHA256 of #{File.basename(__FILE__)} — tamper detection"
+  end
 end

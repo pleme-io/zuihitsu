@@ -1,4 +1,4 @@
-#[cfg(feature = "ssr")]
+#[cfg(feature = "ssr-server")]
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     use axum::{Router, routing::get};
@@ -45,5 +45,12 @@ async fn main() -> anyhow::Result<()> {
     Ok(())
 }
 
-#[cfg(not(feature = "ssr"))]
-fn main() {}
+#[cfg(not(feature = "ssr-server"))]
+fn main() {
+    eprintln!(
+        "zuihitsu binary requires the `ssr-server` feature; rebuild with \
+         `cargo build --features ssr-server`.\n\
+         See Cargo.toml for the feature rationale (leptos_axum 0.7 × axum 0.8 skew)."
+    );
+    std::process::exit(1);
+}

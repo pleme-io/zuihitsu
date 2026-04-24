@@ -12,7 +12,7 @@ crate-type = ["cdylib", "rlib"]
 [[bin]]
 name = "zuihitsu"
 path = "src/main.rs"
-required-features = ["ssr"]
+required-features = ["ssr-server"]
 
 [[bin]]
 name = "zuihitsu-sitegen"
@@ -74,9 +74,14 @@ ssr = [
     "dep:anyhow",
     "dep:tracing-subscriber",
     "leptos/ssr",
-    "leptos_router/ssr",
     "leptos_meta/ssr",
 ]
+# SSR axum binary. Gated off `ssr` because leptos_axum 0.7 + axum 0.8 hit an
+# API skew on `.leptos_routes` — the library tree compiles cleanly but the
+# server wiring in `main.rs` does not. The K3s SSR render target is
+# `active: false` in `deploy.yaml`; activate this feature once either axum is
+# pinned back to 0.7 or leptos_axum is upgraded past the break.
+ssr-server = ["ssr"]
 hydrate = [
     "dep:wasm-bindgen",
     "dep:wasm-bindgen-futures",
@@ -90,7 +95,6 @@ hydrate = [
     "dep:console_error_panic_hook",
     "dep:tracing-web",
     "leptos/hydrate",
-    "leptos_router/hydrate",
 ]
 # Static site generator (Cloudflare Pages target). Pulls the SSR-side deps
 # it needs without axum / leptos_axum / tower.

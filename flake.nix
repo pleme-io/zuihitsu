@@ -130,8 +130,8 @@
         pangea-install = mkApp "zuihitsu-pangea-install" ''
           cd pangea && bundle install --path .bundle
         '';
-        pangea-render = mkApp "zuihitsu-pangea-render" ''
-          cd pangea && bundle exec pangea render zuihitsu.rb -o ../terraform/main.tf.json
+        pangea-synth = mkApp "zuihitsu-pangea-synth" ''
+          cd pangea && bundle exec pangea synth zuihitsu.rb
         '';
         pangea-plan = mkApp "zuihitsu-pangea-plan" ''
           cd pangea && bundle exec pangea plan zuihitsu.rb

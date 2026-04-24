@@ -9,7 +9,7 @@
 //! layout), wires the PWA manifest, and renders the standard header/footer.
 
 use crate::entities::{Post, PostSummary, Tag};
-use crate::infra::feed::xml_escape;
+use crate::infra::utils::xml::xml_escape;
 use crate::infra::utils::format::{format_short_date, reading_time_label};
 
 const ISHOU_CSS: &str = include_str!("../../../../style/ishou.css");
@@ -46,7 +46,7 @@ fn shell(meta: &Meta, body: &str) -> String {
         .unwrap_or_default();
 
     format!(
-        r#"<!DOCTYPE html>
+        r##"<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8"/>
@@ -84,7 +84,7 @@ fn shell(meta: &Meta, body: &str) -> String {
 </footer>
 </body>
 </html>
-"#,
+"##,
         title = xml_escape(meta.title),
         description = xml_escape(meta.description),
         og_type = meta.og_type,

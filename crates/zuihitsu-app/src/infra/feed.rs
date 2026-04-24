@@ -7,6 +7,7 @@
 
 use crate::entities::PostSummary;
 use crate::infra::graphql::client::Hashnode;
+use crate::infra::utils::xml::xml_escape;
 
 const DEFAULT_SITE_URL: &str = "https://blog.pleme.io";
 
@@ -85,14 +86,6 @@ pub fn build_rss(posts: &[PostSummary], site_url: &str) -> String {
     }
     xml.push_str("</channel></rss>\n");
     xml
-}
-
-pub fn xml_escape(s: &str) -> String {
-    s.replace('&', "&amp;")
-        .replace('<', "&lt;")
-        .replace('>', "&gt;")
-        .replace('"', "&quot;")
-        .replace('\'', "&apos;")
 }
 
 // ---------- axum handlers (SSR path) ----------

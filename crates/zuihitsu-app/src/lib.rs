@@ -1,12 +1,23 @@
-pub mod app;
 pub mod entities;
-pub mod features;
 pub mod infra;
-pub mod pages;
-pub mod providers;
-pub mod router;
-pub mod shared;
 pub mod static_render;
+
+// Leptos view-tree modules — only compiled when targeting SSR or hydrate.
+// The sitegen binary produces pure-string HTML via `static_render` and does
+// not depend on the Leptos runtime at all.
+#[cfg(any(feature = "ssr", feature = "hydrate"))]
+pub mod app;
+#[cfg(any(feature = "ssr", feature = "hydrate"))]
+pub mod features;
+#[cfg(any(feature = "ssr", feature = "hydrate"))]
+pub mod pages;
+#[cfg(any(feature = "ssr", feature = "hydrate"))]
+pub mod providers;
+#[cfg(any(feature = "ssr", feature = "hydrate"))]
+pub mod router;
+#[cfg(any(feature = "ssr", feature = "hydrate"))]
+pub mod shared;
+#[cfg(any(feature = "ssr", feature = "hydrate"))]
 pub mod widgets;
 
 #[cfg(feature = "hydrate")]

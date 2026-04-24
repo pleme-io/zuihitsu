@@ -25,8 +25,8 @@ pub fn shell(options: LeptosOptions) -> impl IntoView {
                 <link rel="icon" href="/favicon.svg" type="image/svg+xml"/>
                 <link rel="alternate" type="application/rss+xml" title="zuihitsu" href="/rss.xml"/>
                 <AutoReload options=options.clone()/>
-                <HydrationScripts options/>
-                <HashedStylesheet id="leptos" options=options.clone()/>
+                <HydrationScripts options=options.clone()/>
+                <HashedStylesheet id="leptos" options/>
                 <style>{include_str!("../../../style/ishou.css")}</style>
                 <style>{include_str!("../../../style/main.css")}</style>
                 <MetaTags/>
