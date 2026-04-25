@@ -21,9 +21,18 @@ fn Year() -> impl IntoView {
     // Rendered once at build, fine for a footer copyright.
     let year: i32 = {
         #[cfg(feature = "ssr")]
-        { chrono::Utc::now().date_naive().format("%Y").to_string().parse().unwrap_or(2026) }
+        {
+            chrono::Utc::now()
+                .date_naive()
+                .format("%Y")
+                .to_string()
+                .parse()
+                .unwrap_or(2026)
+        }
         #[cfg(not(feature = "ssr"))]
-        { 2026 }
+        {
+            2026
+        }
     };
     view! { {year} }
 }

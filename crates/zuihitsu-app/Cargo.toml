@@ -54,6 +54,12 @@ pulldown-cmark = { workspace = true, optional = true }
 anyhow = { workspace = true, optional = true }
 tracing-subscriber = { workspace = true, optional = true }
 
+# SSR + sitegen (Hashnode disk cache, parallel fetches, drafts, CLI flags)
+blake3 = { workspace = true, optional = true }
+futures = { workspace = true, optional = true }
+clap = { workspace = true, optional = true }
+serde_yaml_ng = { workspace = true, optional = true }
+
 # Shared
 tracing.workspace = true
 
@@ -73,6 +79,8 @@ ssr = [
     "dep:pulldown-cmark",
     "dep:anyhow",
     "dep:tracing-subscriber",
+    "dep:blake3",
+    "dep:futures",
     "leptos/ssr",
     "leptos_meta/ssr",
 ]
@@ -97,13 +105,19 @@ hydrate = [
     "leptos/hydrate",
 ]
 # Static site generator (Cloudflare Pages target). Pulls the SSR-side deps
-# it needs without axum / leptos_axum / tower.
+# it needs without axum / leptos_axum / tower. Adds blake3 (Hashnode disk
+# cache key), futures (parallel post fetches), clap (--only / --drafts
+# flags), and serde_yaml_ng (drafts frontmatter).
 sitegen = [
     "dep:tokio",
     "dep:reqwest",
     "dep:pulldown-cmark",
     "dep:anyhow",
     "dep:tracing-subscriber",
+    "dep:blake3",
+    "dep:futures",
+    "dep:clap",
+    "dep:serde_yaml_ng",
 ]
 
 [lints]

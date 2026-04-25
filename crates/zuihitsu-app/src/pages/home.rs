@@ -1,8 +1,8 @@
 use leptos::prelude::*;
 use leptos_meta::{Meta, Title};
 
-use crate::features::posts::components::post_list::PostList;
 use crate::features::newsletter::components::subscribe_form::SubscribeForm;
+use crate::features::posts::components::post_list::PostList;
 use crate::widgets::PageShell;
 
 #[component]

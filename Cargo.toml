@@ -1,5 +1,5 @@
 [workspace]
-members = ["crates/zuihitsu-app", "crates/zuihitsu-worker"]
+members = ["crates/zuihitsu-app", "crates/zuihitsu-dev", "crates/zuihitsu-worker"]
 resolver = "2"
 
 [workspace.package]
@@ -14,10 +14,19 @@ leptos_router = "0.7"
 leptos_meta = "0.7"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+serde_yaml_ng = "0.10"
 cfg-if = "1"
 http = "1"
 chrono = { version = "0.4", default-features = false, features = ["serde", "clock"] }
 thiserror = "2"
+blake3 = "1"
+clap = { version = "4", features = ["derive"] }
+futures = "0.3"
+notify = "8"
+notify-debouncer-mini = "0.6"
+hex = "0.4"
+hmac = "0.12"
+sha2 = "0.10"
 
 # Hydrate-side (wasm32)
 wasm-bindgen = "=0.2.105"
@@ -68,3 +77,16 @@ inherits = "release"
 opt-level = "z"
 lto = true
 codegen-units = 1
+
+# Fast iteration profile used by zuihitsu-dev's build pipeline. Skips LTO,
+# raises codegen-units, keeps debuginfo minimal, leans on incremental — the
+# combination cuts the sitegen rebuild from ~8s to ~1-2s after the first
+# build. Runtime perf doesn't matter (sitegen is single-pass) so this is
+# always preferable to plain `dev` for our use.
+[profile.dev-fast]
+inherits = "dev"
+opt-level = 0
+debug = "line-tables-only"
+incremental = true
+codegen-units = 256
+split-debuginfo = "unpacked"

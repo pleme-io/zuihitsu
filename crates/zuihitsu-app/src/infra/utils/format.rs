@@ -5,12 +5,7 @@ use chrono::{DateTime, Datelike, Utc};
 #[must_use]
 pub fn format_short_date(iso: &str) -> String {
     match iso.parse::<DateTime<Utc>>() {
-        Ok(dt) => format!(
-            "{} {}, {}",
-            month_short(dt.month()),
-            dt.day(),
-            dt.year()
-        ),
+        Ok(dt) => format!("{} {}, {}", month_short(dt.month()), dt.day(), dt.year()),
         Err(_) => iso.to_owned(),
     }
 }

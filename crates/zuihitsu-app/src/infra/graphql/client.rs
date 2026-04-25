@@ -4,14 +4,24 @@
 //! Leptos `#[server]` function in `shared::server_fns`, which constructs this
 //! client fresh per-request. This keeps CORS out of the picture and keeps the
 //! hydrate bundle free of reqwest.
+//!
+//! Disk cache (dev only). Setting `ZUIHITSU_HASHNODE_CACHE_DIR=<path>` makes
+//! `query()` consult `<path>/<blake3-of-body>.json` before hitting the
+//! network, and write successful responses there. `ZUIHITSU_HASHNODE_OFFLINE=1`
+//! turns cache misses into errors instead of falling through to the network —
+//! useful for offline iteration and for asserting in CI that the cache covers
+//! the queries the build needs. `zuihitsu-dev fetch` invalidates the cache
+//! and re-warms it.
+
+use std::path::PathBuf;
 
 use anyhow::{Context, Result, anyhow};
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 
-use crate::entities::{Author, Post, PostPage, PostSummary, Publication, Seo, Tag};
 use super::queries;
+use crate::entities::{Author, Post, PostPage, PostSummary, Publication, Seo, Tag};
 
 const GQL_ENDPOINT: &str = "https://gql.hashnode.com/";
 const DEFAULT_HOST: &str = "drzln.hashnode.dev";
@@ -24,8 +34,8 @@ pub struct Hashnode {
 
 impl Hashnode {
     pub fn from_env() -> Result<Self> {
-        let host = std::env::var("ZUIHITSU_HASHNODE_HOST")
-            .unwrap_or_else(|_| DEFAULT_HOST.to_string());
+        let host =
+            std::env::var("ZUIHITSU_HASHNODE_HOST").unwrap_or_else(|_| DEFAULT_HOST.to_string());
         let http = Client::builder()
             .user_agent("zuihitsu/0.1 (+https://github.com/pleme-io/zuihitsu)")
             .timeout(std::time::Duration::from_secs(10))
@@ -39,6 +49,19 @@ impl Hashnode {
     }
 
     async fn query(&self, body: Value) -> Result<Value> {
+        let cache = QueryCache::from_env(&body);
+
+        if let Some(cached) = cache.read() {
+            tracing::debug!(key = %cache.key(), "hashnode cache hit");
+            return Ok(cached);
+        }
+        if cache.offline {
+            return Err(anyhow!(
+                "ZUIHITSU_HASHNODE_OFFLINE set and no cached response for query (key={})",
+                cache.key()
+            ));
+        }
+
         let resp = self
             .http
             .post(GQL_ENDPOINT)
@@ -56,6 +79,8 @@ impl Hashnode {
         {
             return Err(anyhow!("hashnode graphql errors: {errs}"));
         }
+
+        cache.write(&json);
         Ok(json)
     }
 
@@ -150,7 +175,11 @@ impl Hashnode {
             return Ok(None);
         }
         Ok(Some(Publication {
-            id: node.pointer("/id").and_then(Value::as_str).unwrap_or("").to_owned(),
+            id: node
+                .pointer("/id")
+                .and_then(Value::as_str)
+                .unwrap_or("")
+                .to_owned(),
             title: node
                 .pointer("/title")
                 .and_then(Value::as_str)
@@ -205,8 +234,8 @@ fn parse_post_page(data: &Value, pointer: &str) -> Result<PostPage> {
 }
 
 fn parse_post_summary(node: &Value) -> Result<PostSummary> {
-    let raw: RawPost = serde_json::from_value(node.clone())
-        .context("deserialize hashnode post summary")?;
+    let raw: RawPost =
+        serde_json::from_value(node.clone()).context("deserialize hashnode post summary")?;
     Ok(PostSummary {
         id: raw.id,
         title: raw.title,
@@ -233,8 +262,7 @@ fn parse_post_summary(node: &Value) -> Result<PostSummary> {
 }
 
 fn parse_post(node: &Value) -> Result<Post> {
-    let raw: RawPost =
-        serde_json::from_value(node.clone()).context("deserialize hashnode post")?;
+    let raw: RawPost = serde_json::from_value(node.clone()).context("deserialize hashnode post")?;
     let content = raw.content.unwrap_or_default();
     Ok(Post {
         id: raw.id,
@@ -315,4 +343,59 @@ struct RawContent {
 struct RawSeo {
     title: Option<String>,
     description: Option<String>,
+}
+
+/// Disk cache plumbing for `Hashnode::query()`. One file per query body,
+/// keyed by `blake3(serde_json::to_vec(body))`. Failures are downgraded to
+/// debug logs — a corrupt or unreadable cache should never block a build.
+struct QueryCache {
+    path: Option<PathBuf>,
+    key: String,
+    offline: bool,
+}
+
+impl QueryCache {
+    fn from_env(body: &Value) -> Self {
+        let key = body_key(body);
+        let path = std::env::var_os("ZUIHITSU_HASHNODE_CACHE_DIR")
+            .map(PathBuf::from)
+            .map(|d| d.join(format!("{key}.json")));
+        let offline = std::env::var_os("ZUIHITSU_HASHNODE_OFFLINE").is_some();
+        Self { path, key, offline }
+    }
+
+    fn key(&self) -> &str {
+        &self.key
+    }
+
+    fn read(&self) -> Option<Value> {
+        let path = self.path.as_ref()?;
+        let raw = std::fs::read_to_string(path).ok()?;
+        serde_json::from_str(&raw).ok()
+    }
+
+    fn write(&self, value: &Value) {
+        let Some(path) = self.path.as_ref() else {
+            return;
+        };
+        if let Some(parent) = path.parent()
+            && let Err(e) = std::fs::create_dir_all(parent)
+        {
+            tracing::debug!(error = %e, dir = %parent.display(), "hashnode cache: mkdir failed");
+            return;
+        }
+        match serde_json::to_vec_pretty(value) {
+            Ok(bytes) => {
+                if let Err(e) = std::fs::write(path, bytes) {
+                    tracing::debug!(error = %e, path = %path.display(), "hashnode cache: write failed");
+                }
+            }
+            Err(e) => tracing::debug!(error = %e, "hashnode cache: encode failed"),
+        }
+    }
+}
+
+fn body_key(body: &Value) -> String {
+    let bytes = serde_json::to_vec(body).unwrap_or_default();
+    blake3::hash(&bytes).to_hex().to_string()
 }

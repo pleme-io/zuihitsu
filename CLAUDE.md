@@ -97,9 +97,58 @@ nix run .#freescape-check        # validate fit against Cloudflare free tier
 nix build                        # combined SSR binary + CSR WASM + docker image
 nix run .#default                # run SSR binary locally
 
-# Dev
+# Dev loop — see "Dev loop" below for what each does
+nix run .#dev                    # daemon: watch sources, hot-reload at :3000
+nix run .#fetch                  # invalidate Hashnode disk cache + re-warm
+nix run .#draft -- <slug>        # scaffold drafts/<slug>.md
+nix run .#worker-dev             # wrangler dev --local for the worker
+nix run .#worker-test -- --secret <s>  # POST signed mock webhook to local worker
+nix run .#tunnel                 # cloudflared quick-tunnel to local worker
+nix run .#preview                # wrangler pages dev (prod-parity smoke)
+
 nix develop                      # fenix + cargo + wasm-bindgen + wrangler + ruby + tofu
 ```
+
+## Dev loop
+
+The fast inner loop is the `zuihitsu-dev` daemon (`crates/zuihitsu-dev/`).
+Single Rust binary, four subcommands; the flake apps are 1-2 line `exec`
+wrappers per the pleme-io no-shell policy.
+
+What you get from `nix run .#dev`:
+
+| You edit | What happens | Latency |
+|----------|--------------|---------|
+| `style/*.css` | daemon copies to dist/, pushes WS `css` event, browser swaps `<link>` href | <100ms, no flash, no scroll loss |
+| `public/*` | daemon copies to dist/, pushes WS `reload` | ~50ms |
+| `crates/zuihitsu-app/src/**` | cargo build (dev-fast profile) + sitegen + WS `reload` | ~1–3s after first build |
+| `drafts/*.md` | sitegen `--only home,posts,tags,feeds` + WS `reload` | <2s (cargo skipped) |
+| Hashnode publishes a post | poller (every 30s by default) detects via summary hash, invalidates cache, re-runs sitegen | ~30s after publish |
+| Build fails | WS `error` → full-screen overlay in the browser with cargo / sitegen output | immediate |
+
+Behind it:
+- **Disk cache** for Hashnode GraphQL responses, keyed by
+  `blake3(query body)`. Defaults to `.cache/hashnode/`. `zuihitsu-dev fetch`
+  invalidates + re-warms; `ZUIHITSU_HASHNODE_OFFLINE=1` errors on miss
+  instead of falling through to the network.
+- **Linked CSS in dev** via `ZUIHITSU_DEV_LINKED_CSS=1` (set automatically by
+  the daemon). Production keeps the inline-CSS one-round-trip path.
+- **`drafts/` (gitignored)** — local-only markdown files with YAML
+  frontmatter that merge into the Hashnode post list. Format documented in
+  `crates/zuihitsu-app/src/infra/draft.rs`. Sitegen reads them via
+  `--drafts <dir>`; production GHA never passes the flag.
+- **`--only` flag on sitegen** — `home,about,not_found,posts,tags,feeds,assets,all`.
+  Static targets (`about`, `not_found`, `assets`) skip Hashnode entirely so
+  they work offline.
+- **Custom `dev-fast` cargo profile** — `incremental=true`, `codegen-units=256`,
+  `debug="line-tables-only"`, `split-debuginfo="unpacked"`. Cuts the sitegen
+  rebuild from ~8s to ~1–2s after the first build.
+
+Reusable substrate recipe at
+`substrate/lib/build/web/static-site-dev-loop.nix` exposes
+`mkDevApp`/`mkFetchApp`/`mkDraftApp`/`mkWorkerTestApp`/`mkWorkerDevApp`/`mkTunnelApp`/`mkPreviewApp`
+factories — copy `crates/zuihitsu-dev/` into the next blog (rename to
+`<name>-dev`), consume the recipe, you're done.
 
 ## Runtime configuration
 
@@ -188,6 +237,7 @@ into substrate recipes:
 - `substrate/lib/build/rust/rust-static-site-flake.nix`
 - `substrate/lib/build/rust/cloudflare-worker-flake.nix`
 - `substrate/lib/build/web/cloudflare-pages-deploy.nix`
+- `substrate/lib/build/web/static-site-dev-loop.nix` ← landed; consumed by zuihitsu's flake inline today
 - `substrate/lib/infra/cloudflare-headless-blog.nix`
 - `substrate/lib/service/headless-blog-sdlc.nix`
 
@@ -195,3 +245,62 @@ Skill: `blackmatter-pleme/skills/cloudflare-headless-blog/`.
 
 Until those land, this repo's `flake.nix` is bespoke (scripted apps).
 The migration is mechanical and will land as a follow-up commit.
+
+## Status — what's done, what's next
+
+**Done (2026-04-25 — dev-loop milestone):**
+
+- `zuihitsu-dev` daemon (`crates/zuihitsu-dev/`) — single Rust binary, four
+  subcommands (`daemon`, `fetch`, `draft`, `worker-test`). 16 unit tests.
+- Hashnode response disk cache (`infra/graphql/client.rs`), blake3-keyed,
+  with `ZUIHITSU_HASHNODE_OFFLINE=1` for strict mode.
+- Drafts loader (`infra/draft.rs`) — YAML frontmatter + markdown.
+- Sitegen CLI: `--only` and `--drafts` flags, parallel post fetches via
+  `try_join_all`. Static targets (about / not_found / assets) bypass
+  Hashnode entirely so they work offline.
+- `ZUIHITSU_DEV_LINKED_CSS=1` toggle in `static_render::shell()` — link
+  tags in dev (so the daemon can swap stylesheets without a Rust rebuild),
+  inlined in production.
+- `[profile.dev-fast]` in `Cargo.toml` — incremental, no-LTO, 256
+  codegen-units, line-tables-only debug, unpacked split-debuginfo.
+- Seven flake apps: `dev`, `fetch`, `draft`, `worker-test`, `worker-dev`,
+  `tunnel`, `preview` — each a 1-2 line `exec` wrapper per the pleme-io
+  no-shell policy.
+- Substrate recipe: `substrate/lib/build/web/static-site-dev-loop.nix`
+  with `mkDevApp` / `mkFetchApp` / `mkDraftApp` / `mkWorkerTestApp` /
+  `mkWorkerDevApp` / `mkTunnelApp` / `mkPreviewApp` / `mkAllApps`
+  factories.
+
+**Next (in rough priority order):**
+
+1. **Wire the GHA `repository_dispatch` workflow.** The worker fires a
+   `zuihitsu-rebuild` event but no workflow listens for it yet. Without
+   this, real Hashnode publishes don't actually rebuild prod. Add
+   `.github/workflows/rebuild.yml` that runs
+   `nix run .#generate && nix run .#pages-deploy` on
+   `repository_dispatch: zuihitsu-rebuild`.
+2. **Package `zuihitsu-dev` as a Nix derivation.** Today `nix run .#dev`
+   pays a cargo build on first invocation (~30-60s cold). Adding it to
+   the crate2nix build set or wrapping with `rustPlatform.buildRustPackage`
+   makes the first launch instant. Same for the other six apps.
+3. **Extract `zuihitsu-dev` → generic `pleme-static-dev` crate.** Once a
+   second blog (novaskyn?) needs the same loop, lift the daemon into its
+   own crates.io-published library and have the substrate recipe build
+   that crate via crate2nix instead of relying on a per-repo copy.
+4. **Fix substrate's deprecated `pkgs.nodePackages.npm` reference**
+   (`substrate/lib/build/rust/leptos-build.nix:245`). Currently breaks
+   `nix develop` against current nixpkgs. Replace with `pkgs.nodejs_20`
+   (which already provides `npm`).
+5. **Hashnode publish CLI** (`zuihitsu-dev publish drafts/<slug>.md`).
+   Posts a draft to Hashnode via the GraphQL mutation API, gated on a
+   `HASHNODE_PAT` env var. Closes the local-draft loop end-to-end.
+6. **Per-render-fn dependency map.** Today any change under
+   `crates/zuihitsu-app/src/` triggers a full sitegen via `--only all`.
+   Splitting `static_render/mod.rs` into `static_render/{shell,home,post,
+   tag,about,not_found}.rs` plus a small file → target table in
+   `daemon/watch.rs` would let template edits map to the minimal
+   `--only home` / `--only posts` / etc.
+7. **Source-link the build error overlay.** `daemon/server.rs` pushes the
+   raw cargo output; if we parse the `path:line:col` prefix and emit
+   `vscode://` / `cursor://` links, clicking the overlay jumps to the
+   offending line.

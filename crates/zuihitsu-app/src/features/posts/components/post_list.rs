@@ -6,10 +6,7 @@ use crate::shared::server_fns::{fetch_posts, fetch_posts_by_tag};
 
 #[component]
 pub fn PostList() -> impl IntoView {
-    let posts = Resource::new(
-        || (),
-        |()| async move { fetch_posts(None, Some(20)).await },
-    );
+    let posts = Resource::new(|| (), |()| async move { fetch_posts(None, Some(20)).await });
     view! {
         <Suspense fallback=move || view! { <div class="z-spinner" aria-label="Loading"/> }>
             {move || Suspend::new(async move {
