@@ -9,11 +9,32 @@
 //! layout), wires the PWA manifest, and renders the standard header/footer.
 
 use crate::entities::{Post, PostSummary, Tag};
-use crate::infra::utils::xml::xml_escape;
 use crate::infra::utils::format::{format_short_date, reading_time_label};
+use crate::infra::utils::xml::xml_escape;
 
 const ISHOU_CSS: &str = include_str!("../../../../style/ishou.css");
 const APP_CSS: &str = include_str!("../../../../style/main.css");
+
+/// Renders the `<style>` / `<link>` block that goes in `<head>`.
+///
+/// Production: inlines both CSS files into the document for one-round-trip
+/// rendering — Cloudflare Pages serves the page and the styles in a single
+/// HTTP response. Sitegen always copies the source CSS into `dist/` too.
+///
+/// Dev (`ZUIHITSU_DEV_LINKED_CSS=1`): emits `<link>` tags pointing at
+/// `/ishou.css` and `/main.css`. The dev daemon (zuihitsu-dev) watches the
+/// CSS sources, copies them into `dist/`, and pushes a `css` WebSocket event
+/// to the browser, which swaps the link href with a cache-buster — no full
+/// reload, no Rust rebuild, no flash.
+fn css_block() -> String {
+    if std::env::var_os("ZUIHITSU_DEV_LINKED_CSS").is_some() {
+        r#"<link rel="stylesheet" href="/ishou.css"/>
+<link rel="stylesheet" href="/main.css"/>"#
+            .to_string()
+    } else {
+        format!("<style>{ISHOU_CSS}</style><style>{APP_CSS}</style>")
+    }
+}
 
 pub struct Meta<'a> {
     pub title: &'a str,
@@ -63,8 +84,7 @@ fn shell(meta: &Meta, body: &str) -> String {
 <link rel="manifest" href="/manifest.json"/>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml"/>
 <link rel="alternate" type="application/rss+xml" title="zuihitsu" href="/rss.xml"/>
-<style>{ishou_css}</style>
-<style>{app_css}</style>
+{css}
 </head>
 <body>
 <header class="z-header">
@@ -90,8 +110,7 @@ fn shell(meta: &Meta, body: &str) -> String {
         og_type = meta.og_type,
         og_image = og_image_tag,
         canonical = canonical_tag,
-        ishou_css = ISHOU_CSS,
-        app_css = APP_CSS,
+        css = css_block(),
         body = body,
     )
 }
@@ -173,7 +192,12 @@ pub fn render_post(post: &Post, site_url: &str) -> String {
     let cover = post
         .cover_image_url
         .as_ref()
-        .map(|url| format!(r#"<img class="z-article-cover" src="{}" alt="" loading="eager"/>"#, xml_escape(url)))
+        .map(|url| {
+            format!(
+                r#"<img class="z-article-cover" src="{}" alt="" loading="eager"/>"#,
+                xml_escape(url)
+            )
+        })
         .unwrap_or_default();
     let tags: String = post
         .tags

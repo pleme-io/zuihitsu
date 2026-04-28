@@ -1,6 +1,4 @@
-/* ishou — pleme-io design tokens.
-   THIS FILE IS GENERATED. Regenerate via: nix run .#tokens-css
-   Do not hand-edit; the ishou flake input is the source of truth. */
+/* ishou — pleme-io design tokens (generated; do not edit) */
 
 :root {
   /* palette */
@@ -23,7 +21,6 @@
   --ishou-ink: #0A0A0A;
   --ishou-paper: #F5F5F0;
   --ishou-shadow-tone: #141822;
-
   /* semantic roles */
   --ishou-color-background: var(--ishou-polar-night-0);
   --ishou-color-surface: var(--ishou-polar-night-1);
@@ -42,7 +39,6 @@
   --ishou-color-shadow: var(--ishou-shadow-tone);
   --ishou-color-ink: var(--ishou-ink);
   --ishou-color-paper: var(--ishou-paper);
-
   /* typography */
   --ishou-font-serif: 'Iowan Old Style', 'Charter', 'Georgia', 'Cambria', Times, serif;
   --ishou-font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif;
@@ -57,6 +53,7 @@
   --ishou-text-2xl: 1.875rem;
   --ishou-text-3xl: 2.25rem;
   --ishou-text-4xl: 3rem;
+  --ishou-weight-light: 300;
   --ishou-weight-regular: 400;
   --ishou-weight-medium: 500;
   --ishou-weight-semibold: 600;
@@ -65,8 +62,7 @@
   --ishou-leading-base: 1.5;
   --ishou-leading-relaxed: 1.65;
   --ishou-leading-prose: 1.7;
-
-  /* spacing */
+  /* spacing (px) */
   --ishou-space-0: 0px;
   --ishou-space-1: 4px;
   --ishou-space-2: 8px;
@@ -77,25 +73,52 @@
   --ishou-space-10: 40px;
   --ishou-space-12: 48px;
   --ishou-space-16: 64px;
-
+  --ishou-space-20: 80px;
+  --ishou-space-24: 96px;
+  --ishou-space-32: 128px;
   /* radius */
+  --ishou-radius-none: 0px;
   --ishou-radius-sm: 4px;
   --ishou-radius-md: 8px;
   --ishou-radius-lg: 12px;
+  --ishou-radius-xl: 16px;
   --ishou-radius-pill: 999px;
-
+  --ishou-radius-full: 9999px;
   /* shadow (elevation) */
+  --ishou-shadow-none: none;
   --ishou-shadow-sm: 0px 1px 2px 0px rgba(20, 24, 34, 0.20);
   --ishou-shadow-md: 0px 4px 8px 0px rgba(20, 24, 34, 0.30);
   --ishou-shadow-lg: 0px 8px 24px -2px rgba(20, 24, 34, 0.40);
   --ishou-shadow-xl: 0px 16px 48px -4px rgba(20, 24, 34, 0.50);
   --ishou-shadow-brand-bold: 6px 8px 0px 0px rgba(20, 24, 34, 1.00);
-
   /* motion */
+  --ishou-duration-instant: 80ms;
   --ishou-duration-fast: 150ms;
   --ishou-duration-base: 250ms;
   --ishou-duration-slow: 450ms;
-  --ishou-ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
-  --ishou-ease-sonic-boom: cubic-bezier(0.12, 0.8, 0.3, 1);
-  --ishou-ease-saber: cubic-bezier(0.65, 0, 0.35, 1);
+  --ishou-duration-hero: 800ms;
+  --ishou-ease-standard: cubic-bezier(0.400, 0.000, 0.200, 1.000);
+  --ishou-ease-decelerate: cubic-bezier(0.000, 0.000, 0.200, 1.000);
+  --ishou-ease-accelerate: cubic-bezier(0.400, 0.000, 1.000, 1.000);
+  --ishou-ease-sonic-boom: cubic-bezier(0.120, 0.800, 0.300, 1.000);
+  --ishou-ease-saber: cubic-bezier(0.650, 0.000, 0.350, 1.000);
 }
+
+/* Minimal utility layer — brand-critical only. Use Tailwind for everything else. */
+
+.ishou-shadow-brand {
+  box-shadow: var(--ishou-shadow-brand-bold);
+}
+
+.ishou-serif { font-family: var(--ishou-font-serif); }
+.ishou-sans { font-family: var(--ishou-font-sans); }
+.ishou-mono { font-family: var(--ishou-font-mono); }
+
+.ishou-surface {
+  background: var(--ishou-color-surface);
+  color: var(--ishou-color-text);
+  border-radius: var(--ishou-radius-md);
+}
+
+.ishou-ink { color: var(--ishou-color-ink); background: var(--ishou-color-paper); }
+.ishou-paper { color: var(--ishou-color-paper); background: var(--ishou-color-ink); }

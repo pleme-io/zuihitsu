@@ -27,14 +27,10 @@ pub fn PwaProvider(children: Children) -> impl IntoView {
             let online_cb = Closure::<dyn FnMut()>::new(move || set_on.set(true));
             let set_off = set_online;
             let offline_cb = Closure::<dyn FnMut()>::new(move || set_off.set(false));
-            let _ = win.add_event_listener_with_callback(
-                "online",
-                online_cb.as_ref().unchecked_ref(),
-            );
-            let _ = win.add_event_listener_with_callback(
-                "offline",
-                offline_cb.as_ref().unchecked_ref(),
-            );
+            let _ =
+                win.add_event_listener_with_callback("online", online_cb.as_ref().unchecked_ref());
+            let _ = win
+                .add_event_listener_with_callback("offline", offline_cb.as_ref().unchecked_ref());
             online_cb.forget();
             offline_cb.forget();
         }

@@ -15,7 +15,7 @@ use hmac::{Hmac, Mac};
 use serde::Deserialize;
 use serde_json::json;
 use sha2::Sha256;
-use worker::{event, Context, Env, Request, Response, Result, Router};
+use worker::{Context, Env, Request, Response, Result, Router, event};
 
 type HmacSha256 = Hmac<Sha256>;
 

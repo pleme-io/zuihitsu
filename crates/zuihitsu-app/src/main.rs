@@ -8,7 +8,7 @@ async fn main() -> anyhow::Result<()> {
     use tower_http::compression::CompressionLayer;
     use tower_http::trace::TraceLayer;
     use zuihitsu_app::app::{ZuihitsuApp, shell};
-    use zuihitsu_app::infra::feed::{sitemap_xml, rss_xml};
+    use zuihitsu_app::infra::feed::{rss_xml, sitemap_xml};
 
     tracing_subscriber::fmt()
         .with_env_filter(

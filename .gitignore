@@ -9,3 +9,11 @@ dist/
 pkg/
 *.swp
 .DS_Store
+
+# zuihitsu-dev — local-only authoring + cache state.
+# The Hashnode response cache is keyed by blake3(query body); regenerate
+# via `nix run .#fetch`. Drafts are unpublished personal work; once they're
+# ready, they should be authored on Hashnode rather than committed here
+# (the production sitegen never sees `drafts/` — only the dev daemon does).
+.cache/
+drafts/

@@ -70,6 +70,10 @@
           pkgs.bundler
           pkgs.ruby_3_3
           pkgs.opentofu
+          # zuihitsu-dev requirements: cloudflared (tunnel app) is the only
+          # extra binary not already covered. The dev daemon itself is a Rust
+          # binary built via `cargo run` from inside `nix run .#dev`.
+          pkgs.cloudflared
         ];
         binPath = pkgs.lib.makeBinPath devTools;
 
@@ -161,6 +165,44 @@
           echo "TODO: wire arch-synthesizer FreescapeCheck against"
           echo "      pangea-architectures/workspaces/cloudflare-pleme/quero_cloud.rb"
           echo "      once pangea emits a WasmWorkloadDecl sidecar."
+        '';
+
+        # ── Dev loop (zuihitsu-dev) ───────────────────────────────────────
+        # Each wrapper is a single `exec` of either the Rust dev binary
+        # (built on demand by cargo) or an external tool like wrangler /
+        # cloudflared. No shell logic beyond the exec — keeps within the
+        # pleme-io 3-line glue policy and centralises behaviour in
+        # crates/zuihitsu-dev.
+        dev = mkApp "zuihitsu-dev-watch" ''
+          exec cargo run --profile dev-fast -p zuihitsu-dev -- daemon "$@"
+        '';
+        fetch = mkApp "zuihitsu-dev-fetch" ''
+          exec cargo run --profile dev-fast -p zuihitsu-dev -- fetch "$@"
+        '';
+        draft = mkApp "zuihitsu-dev-draft" ''
+          exec cargo run --profile dev-fast -p zuihitsu-dev -- draft "$@"
+        '';
+        worker-test = mkApp "zuihitsu-dev-worker-test" ''
+          exec cargo run --profile dev-fast -p zuihitsu-dev -- worker-test "$@"
+        '';
+        # Local worker via wrangler dev (miniflare). Worker bundle must already
+        # exist at crates/zuihitsu-worker/build/ — run `nix run .#worker-build`
+        # first.
+        worker-dev = mkApp "zuihitsu-worker-dev" ''
+          cd crates/zuihitsu-worker
+          exec wrangler dev
+        '';
+        # Cloudflared quick-tunnel for end-to-end webhook smoke tests against
+        # a real Hashnode payload signed by Hashnode itself.
+        tunnel = mkApp "zuihitsu-tunnel" ''
+          exec cloudflared tunnel --url http://localhost:8787
+        '';
+        # Prod-parity preview: render with inlined CSS via nix run .#generate
+        # first, then serve via wrangler pages dev (Pages routing rules,
+        # _headers, _redirects, etc. — closer to deployed shape than
+        # `nix run .#dev`).
+        preview = mkApp "zuihitsu-preview" ''
+          exec wrangler pages dev "''${1:-dist}"
         '';
       };
     in

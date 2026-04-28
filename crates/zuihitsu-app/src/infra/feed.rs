@@ -46,7 +46,10 @@ pub fn build_sitemap(posts: &[PostSummary], site_url: &str) -> String {
             xml_escape(&p.slug)
         ));
         if !p.published_at.is_empty() {
-            xml.push_str(&format!("<lastmod>{}</lastmod>", xml_escape(&p.published_at)));
+            xml.push_str(&format!(
+                "<lastmod>{}</lastmod>",
+                xml_escape(&p.published_at)
+            ));
         }
         xml.push_str("</url>\n");
     }
@@ -60,7 +63,9 @@ pub fn build_rss(posts: &[PostSummary], site_url: &str) -> String {
     );
     xml.push_str("<title>zuihitsu · 随筆</title>\n");
     xml.push_str(&format!("<link>{site_url}/</link>\n"));
-    xml.push_str("<description>Personal tech essays — Rust, infrastructure, systems</description>\n");
+    xml.push_str(
+        "<description>Personal tech essays — Rust, infrastructure, systems</description>\n",
+    );
     for p in posts {
         xml.push_str("<item>\n");
         xml.push_str(&format!("  <title>{}</title>\n", xml_escape(&p.title)));
