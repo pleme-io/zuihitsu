@@ -1,6 +1,6 @@
 apiVersion: v2
 name: zuihitsu
-version: 0.1.0
+version: 0.2.0
 appVersion: "0.1.0"
 description: zuihitsu (随筆) — personal tech blog, Leptos SSR rendering Hashnode content
 type: application
@@ -16,3 +16,7 @@ maintainers:
 home: https://github.com/pleme-io/zuihitsu
 sources:
   - https://github.com/pleme-io/zuihitsu
+dependencies:
+  - name: pleme-lib
+    version: "0.14.0"
+    repository: "file://../../../helmworks/charts/pleme-lib"

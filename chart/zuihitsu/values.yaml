@@ -1,13 +1,20 @@
 # zuihitsu — Leptos SSR blog.
-# All the SSR + WASM assets are baked into the OCI image by the substrate
-# leptos-build-flake; the axum binary serves both HTML and /pkg/*.
+#
+# Consumes pleme-lib (library chart) for Deployment, Service, ServiceAccount,
+# PDB, HPA, ServiceMonitor. Ingress + NetworkPolicy remain locally templated
+# because zuihitsu's Hashnode-CIDR egress shape isn't expressible via pleme-lib
+# overlay primitives (yet).
 
 replicaCount: 2
 
 image:
   repository: ghcr.io/pleme-io/zuihitsu
   pullPolicy: IfNotPresent
-  tag: ""  # defaults to .Chart.AppVersion
+  # pleme-lib.image falls back to "latest" when tag is empty (vs zuihitsu's
+  # old helper which fell back to .Chart.AppVersion). Set explicitly until
+  # pleme-lib gains an appVersion-fallback. Production overrides via the
+  # FluxCD HelmRelease anyway.
+  tag: "0.1.0"
 
 imagePullSecrets: []
 nameOverride: ""
@@ -38,41 +45,49 @@ securityContext:
     drop:
       - ALL
 
-# -- Upstream Hashnode publication host (used by ZUIHITSU_HASHNODE_HOST).
-hashnode:
-  host: drzln.hashnode.dev
-
-# -- Runtime config for the axum server.
-config:
-  logLevel: info
-  siteAddr: "0.0.0.0:3000"
-
-service:
-  type: ClusterIP
-  port: 3000
-
+# Container ports (pleme-lib's deployment renders these directly).
 ports:
   - name: http
     containerPort: 3000
     protocol: TCP
 
-# -- Liveness / readiness. Axum exposes /healthz and /readyz.
-probes:
-  liveness:
-    path: /healthz
-    initialDelaySeconds: 5
-    periodSeconds: 10
-    failureThreshold: 3
-  readiness:
-    path: /readyz
-    initialDelaySeconds: 2
-    periodSeconds: 5
-    failureThreshold: 3
-  startup:
-    path: /readyz
-    initialDelaySeconds: 2
-    periodSeconds: 2
-    failureThreshold: 20
+# Upstream Hashnode publication host. Single source of truth — env var below
+# references it, NOTES.txt displays it.
+hashnode:
+  host: drzln.hashnode.dev
+
+# Environment variables (pleme-lib renders these into the deployment).
+env:
+  - name: RUST_LOG
+    value: "info"
+  - name: LEPTOS_SITE_ADDR
+    value: "0.0.0.0:3000"
+  - name: LEPTOS_SITE_ROOT
+    value: "/static"
+  - name: ZUIHITSU_HASHNODE_HOST
+    value: "drzln.hashnode.dev"
+
+# pleme-lib probe schema: one `health` block drives liveness + readiness.
+# Startup probe is its own block.
+health:
+  type: HTTPGet
+  path: /healthz
+  readyPath: /readyz
+  port: http
+  livenessInitialDelay: 5
+  livenessPeriod: 10
+  livenessFailureThreshold: 3
+  readinessInitialDelay: 2
+  readinessPeriod: 5
+  readinessFailureThreshold: 3
+
+startupProbe:
+  enabled: true
+  path: /readyz
+  port: http
+  initialDelaySeconds: 2
+  periodSeconds: 2
+  failureThreshold: 20
 
 resources:
   requests:
@@ -82,17 +97,37 @@ resources:
     cpu: 500m
     memory: 256Mi
 
+# pleme-lib service schema: list of ports.
+service:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 3000
+      targetPort: http
+      protocol: TCP
+
 autoscaling:
   enabled: true
   minReplicas: 2
   maxReplicas: 6
   targetCPUUtilizationPercentage: 70
 
-podDisruptionBudget:
+# pleme-lib renames podDisruptionBudget → pdb.
+pdb:
   enabled: true
   minAvailable: 1
 
+# pleme-lib renames serviceMonitor → monitoring. Disabled by default —
+# axum doesn't export /metrics yet; enable once a metrics layer is added.
+monitoring:
+  enabled: false
+  port: http
+  path: /metrics
+  interval: 30s
+  scrapeTimeout: 10s
+
 # -- Ingress. Defaults to blog.quero.cloud with cert-manager TLS.
+# Hand-authored — pleme-lib has no ingress named template (gap).
 ingress:
   enabled: true
   className: nginx
@@ -109,8 +144,8 @@ ingress:
       hosts:
         - blog.quero.cloud
 
-# -- NetworkPolicy. Deny-all default; allow nginx ingress + egress to
-# gql.hashnode.com (via cluster DNS + HTTPS) and DNS.
+# -- NetworkPolicy. Hand-authored — pleme-lib's allowEgress shapes don't
+# cover "allow 0.0.0.0/0 except RFC1918" (egress to Hashnode public API).
 networkPolicy:
   enabled: true
   allowDns: true
@@ -118,16 +153,7 @@ networkPolicy:
   prometheusNamespace: monitoring
   allowIngressFrom:
     - namespace: ingress-nginx
-  # Egress to the Hashnode public API over 443.
   allowEgressHttps: true
-
-# -- ServiceMonitor (Prometheus Operator). Disabled by default — axum doesn't
-# export /metrics yet; enable once a metrics layer is added.
-serviceMonitor:
-  enabled: false
-  interval: 30s
-  path: /metrics
-  labels: {}
 
 nodeSelector: {}
 tolerations: []

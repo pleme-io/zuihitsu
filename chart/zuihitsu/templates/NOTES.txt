@@ -9,8 +9,8 @@ Blog URL:
 {{- end }}
 {{- else }}
 Port-forward locally:
-  kubectl -n {{ .Release.Namespace }} port-forward svc/{{ include "zuihitsu.fullname" . }} 3000:{{ .Values.service.port }}
+  kubectl -n {{ .Release.Namespace }} port-forward svc/{{ include "pleme-lib.fullname" . }} 3000:{{ (index .Values.service.ports 0).port }}
 {{- end }}
 
 Health:
-  kubectl -n {{ .Release.Namespace }} logs -l app.kubernetes.io/name={{ include "zuihitsu.name" . }} -f
+  kubectl -n {{ .Release.Namespace }} logs -l app.kubernetes.io/name={{ include "pleme-lib.name" . }} -f
