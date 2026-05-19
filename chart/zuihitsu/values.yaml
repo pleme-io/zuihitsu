@@ -10,11 +10,9 @@ replicaCount: 2
 image:
   repository: ghcr.io/pleme-io/zuihitsu
   pullPolicy: IfNotPresent
-  # pleme-lib.image falls back to "latest" when tag is empty (vs zuihitsu's
-  # old helper which fell back to .Chart.AppVersion). Set explicitly until
-  # pleme-lib gains an appVersion-fallback. Production overrides via the
-  # FluxCD HelmRelease anyway.
-  tag: "0.1.0"
+  # Empty tag → pleme-lib 0.15.0+ falls back to .Chart.AppVersion (0.1.0).
+  # Production overrides via the FluxCD HelmRelease.
+  tag: ""
 
 imagePullSecrets: []
 nameOverride: ""
@@ -127,7 +125,7 @@ monitoring:
   scrapeTimeout: 10s
 
 # -- Ingress. Defaults to blog.quero.cloud with cert-manager TLS.
-# Hand-authored — pleme-lib has no ingress named template (gap).
+# Rendered by pleme-lib.ingress (0.15.0+).
 ingress:
   enabled: true
   className: nginx
@@ -144,16 +142,26 @@ ingress:
       hosts:
         - blog.quero.cloud
 
-# -- NetworkPolicy. Hand-authored — pleme-lib's allowEgress shapes don't
-# cover "allow 0.0.0.0/0 except RFC1918" (egress to Hashnode public API).
+# -- NetworkPolicy. Rendered by pleme-lib.networkpolicy (0.15.0+).
+# allowEgressHttps emits the "0.0.0.0/0 except RFC1918, TCP 443" rule
+# for egress to gql.hashnode.com.
 networkPolicy:
   enabled: true
   allowDns: true
   allowPrometheus: true
-  prometheusNamespace: monitoring
-  allowIngressFrom:
-    - namespace: ingress-nginx
   allowEgressHttps: true
+  prometheusNamespaces:
+    - monitoring
+  additionalIngress:
+    - name: allow-ingress-nginx
+      rules:
+        - from:
+            - namespaceSelector:
+                matchLabels:
+                  kubernetes.io/metadata.name: ingress-nginx
+          ports:
+            - protocol: TCP
+              port: 3000
 
 nodeSelector: {}
 tolerations: []
