@@ -676,11 +676,11 @@
         "rust-analyzer-src": "rust-analyzer-src"
       },
       "locked": {
-        "lastModified": 1780397302,
-        "narHash": "sha256-SQmrkj17xBdvc8lVMbsY7pIJCjKftgNh42R1keP3dLQ=",
+        "lastModified": 1780485330,
+        "narHash": "sha256-7JhNLs5O+FgXmU8FFP9DMug5xv3y4no+n4Kn94pkFGU=",
         "owner": "nix-community",
         "repo": "fenix",
-        "rev": "f6670530f53e69cc284f7aef818eb0f08fe81905",
+        "rev": "26ddad7ab014ac49bf02fc52e76f801963d684ae",
         "type": "github"
       },
       "original": {
@@ -1861,12 +1861,12 @@
         "substrate": "substrate"
       },
       "locked": {
-        "lastModified": 1780404183,
-        "narHash": "sha256-HqoJgF7KLQIo/WLus1qIjY0Ren2eie4i24+IUWPGHmY=",
-        "rev": "935ee51f76ca9a8ade2942b478574f3d290213a2",
-        "revCount": 102,
+        "lastModified": 1780436138,
+        "narHash": "sha256-57xUUgwUuqOHLmuCDq6krOcjS842hih/wzuIYngWuVY=",
+        "rev": "0476c75543751192f8b5ddbebfb79cbe08320bd9",
+        "revCount": 103,
         "type": "tarball",
-        "url": "https://api.flakehub.com/f/pinned/pleme-io/ishou/0.1.102%2Brev-935ee51f76ca9a8ade2942b478574f3d290213a2/019e885e-164f-73e2-8647-0e756e69c82b/source.tar.gz"
+        "url": "https://api.flakehub.com/f/pinned/pleme-io/ishou/0.1.103%2Brev-0476c75543751192f8b5ddbebfb79cbe08320bd9/019e8a45-7bd8-78f1-8cf8-24661b3ce5e2/source.tar.gz"
       },
       "original": {
         "type": "tarball",
@@ -2628,11 +2628,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1780401413,
-        "narHash": "sha256-WQat3wwq0UZGo3Fy5Gb/Lqrfak5uSopbcrwqQIr+SrY=",
+        "lastModified": 1780431594,
+        "narHash": "sha256-tK3gxji0x8J1P8yJHzD9WknpOnR7WAXmVZQ/Zi0xASo=",
         "owner": "pleme-io",
         "repo": "substrate",
-        "rev": "964fed5cf914f51ad74bed115f32e8826dd6a0e6",
+        "rev": "505f45d66d94bc8d28b07acd68026d848be708ff",
         "type": "github"
       },
       "original": {
@@ -2653,11 +2653,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1780425859,
-        "narHash": "sha256-OHnoFgSbSq2o1/Zmorat+wrS9C8M/AYy0qFq3d8o/Yo=",
+        "lastModified": 1780491021,
+        "narHash": "sha256-w1u2d9ZHQ4Jliimd6R9W1KcWKRpgB3u+n0UE3pXrQAU=",
         "owner": "pleme-io",
         "repo": "substrate",
-        "rev": "5158d658457836869a60f4e047d1ca39ede57dd9",
+        "rev": "25cd7b2b995ede15ad1fa82933d225eabbd1bdfd",
         "type": "github"
       },
       "original": {
