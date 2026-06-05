@@ -676,11 +676,11 @@
         "rust-analyzer-src": "rust-analyzer-src"
       },
       "locked": {
-        "lastModified": 1780568033,
-        "narHash": "sha256-gKC2HPrqwR5bso+17y27f0dCxyZM4IPl/ANy3jK5BDk=",
+        "lastModified": 1780654233,
+        "narHash": "sha256-F5rHBSjkUyobwPC2IclWO6t91hiKBnuJa0yDfKuUchE=",
         "owner": "nix-community",
         "repo": "fenix",
-        "rev": "67e07d2f273a0761702abc9cf597ed13fcd2b0cb",
+        "rev": "b9e0e5df8f7b4456eb1cad97c435ad0b3e44c669",
         "type": "github"
       },
       "original": {
@@ -1861,12 +1861,12 @@
         "substrate": "substrate"
       },
       "locked": {
-        "lastModified": 1780517216,
-        "narHash": "sha256-ihLvPvl8S9zLI3yWChVIRORiQI81UcjNe0i6TcL6tgQ=",
-        "rev": "57846be3f314df65a81eade875200c4664420006",
-        "revCount": 109,
+        "lastModified": 1780631912,
+        "narHash": "sha256-+HSLVlf36HIepluLu8OHQnwOsgj2YQcI8YgpU1kfrO8=",
+        "rev": "205c435bdc7e343af4bff9ab3949459fb6205a89",
+        "revCount": 110,
         "type": "tarball",
-        "url": "https://api.flakehub.com/f/pinned/pleme-io/ishou/0.1.109%2Brev-57846be3f314df65a81eade875200c4664420006/019e8f39-a666-7401-9278-4734d28673d0/source.tar.gz"
+        "url": "https://api.flakehub.com/f/pinned/pleme-io/ishou/0.1.110%2Brev-205c435bdc7e343af4bff9ab3949459fb6205a89/019e95fc-f7ab-7d82-914c-b63569caea7a/source.tar.gz"
       },
       "original": {
         "type": "tarball",
@@ -2522,11 +2522,11 @@
     "rust-analyzer-src": {
       "flake": false,
       "locked": {
-        "lastModified": 1780511783,
-        "narHash": "sha256-HFWX93W06suBgnNXlo6MgHiL1y4kj43QJDVqgYMIt1w=",
+        "lastModified": 1780573409,
+        "narHash": "sha256-Dlru75JzUwjI9d5uiDrN9Rt/wTFVTuqt6QBT+nf2g8U=",
         "owner": "rust-lang",
         "repo": "rust-analyzer",
-        "rev": "9b9f59ca5b893d8b6c97e38100dc42bfc4428672",
+        "rev": "aadee11251e6074c9245ac96bc4bfe6eca05a64c",
         "type": "github"
       },
       "original": {
@@ -2628,11 +2628,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1780511268,
-        "narHash": "sha256-7CXqBFBHpZEob7/DYpCH/1jkHVVSa8HgfC1TyeVWtcI=",
+        "lastModified": 1780602791,
+        "narHash": "sha256-+HVFgCc/68LjfQ6gsQ0Zo+Eh2eeJjXSsPkRDLwIk+Oo=",
         "owner": "pleme-io",
         "repo": "substrate",
-        "rev": "4730e77ada1ec7028094ddbb96bd24b9849ff29c",
+        "rev": "9e80be208762f87caca6b01769e432714454587a",
         "type": "github"
       },
       "original": {
